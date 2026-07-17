@@ -65,17 +65,6 @@ const LoadingFallback = () => (
   </div>
 );
 
-function MarketsPreview() {
-  return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="container mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Markets Preview</h1>
-        <p className="text-muted-foreground">Market data coming soon.</p>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -88,7 +77,7 @@ export default function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/prices" element={<CryptoPrices />} />
-              <Route path="/markets-preview" element={<MarketsPreview />} />
+              <Route path="/markets-preview" element={<div className="min-h-screen bg-background p-4 md:p-8"><DashboardMarkets /></div>} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />

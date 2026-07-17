@@ -11,7 +11,7 @@ import { useToast } from "../hooks/useToast";
 import { Shield, ArrowLeft, Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 export function Auth() {
-  const { t, isRTL, dir } = useLanguage();
+  const { t, isRTL, dir, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,21 +50,17 @@ export function Auth() {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: signupForm.email,
-      password: signupForm.password,
-      options: {
-        data: {
-          full_name: signupForm.fullName,
-          phone: signupForm.phone,
-        },
-      },
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Success", description: "Account created! Please check your email to verify." });
+    try {
+      const code = Math.floor(1e5 + 9e5 * Math.random()).toString();
+      const { error } = await supabase.functions.invoke("send-verification-code", {
+        body: { email: signupForm.email, code, password: signupForm.password, fullName: signupForm.fullName, phone: signupForm.phone, language },
+      });
+      if (error) throw error;
+      sessionStorage.setItem("pendingVerificationEmail", signupForm.email);
+      toast({ title: "Code sent", description: "Check your email for the verification code." });
       navigate("/verify-email?email=" + encodeURIComponent(signupForm.email));
+    } catch (err) {
+      toast({ title: "Error", description: err.message || "Failed to send verification code", variant: "destructive" });
     }
     setLoading(false);
   };
