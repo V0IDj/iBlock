@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAdmin } from "../contexts/AdminContext";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../components/ui/Card";
@@ -6,12 +6,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { Textarea } from "../components/ui/Textarea";
-
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/useToast";
 import { CirclePlus, LoaderCircle, CheckCircle2 } from "lucide-react";
 
-const types = [
+const TYPES = [
   { value: "deposit", ar: "إيداع", en: "Deposit" },
   { value: "withdrawal", ar: "سحب", en: "Withdrawal" },
   { value: "capital_update", ar: "تحديث رأس المال", en: "Capital Update" },
@@ -19,7 +18,7 @@ const types = [
   { value: "recovery_update", ar: "تحديث الاسترداد", en: "Recovery Update" },
 ];
 
-const statuses = [
+const STATUSES = [
   { value: "pending", ar: "قيد المراجعة", en: "Pending" },
   { value: "approved", ar: "مقبول", en: "Approved" },
   { value: "completed", ar: "مكتمل", en: "Completed" },
@@ -51,7 +50,7 @@ export function AdminNewTransaction() {
     setSaving(true);
     const prof = profiles.find(p => p.user_id === userId);
     const clientName = prof?.full_name || prof?.email || "Unknown";
-    const typeLabel = types.find(t => t.value === type)?.[isAr ? "ar" : "en"] || type;
+    const typeLabel = TYPES.find(t => t.value === type)?.[isAr ? "ar" : "en"] || type;
     const desc = description || typeLabel;
 
     const { error } = await supabase.from("transaction_log").insert({
@@ -69,7 +68,7 @@ export function AdminNewTransaction() {
       return;
     }
 
-    // Update client_finances for certain types
+    // Update client_finances for capital/profit/recovery changes
     if (["capital_update", "profit_update", "recovery_update", "deposit", "withdrawal"].includes(type) && status !== "rejected") {
       const { data: fin } = await supabase.from("client_finances").select("*").eq("user_id", userId).single();
       if (fin) {
@@ -84,7 +83,7 @@ export function AdminNewTransaction() {
     }
 
     if (sendNotif) {
-      const label = types.find(t => t.value === type)?.[isAr ? "ar" : "en"] || type;
+      const label = TYPES.find(t => t.value === type)?.[isAr ? "ar" : "en"] || type;
       await supabase.from("notifications").insert({
         user_id: userId,
         title: `💼 ${label} - $${Number(amount).toLocaleString()}`,
@@ -105,12 +104,10 @@ export function AdminNewTransaction() {
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold">{isAr ? "إضافة معاملة جديدة" : "Add New Transaction"}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{isAr ? "إنشاء معاملة يدوية وتسجيلها" : "Create a manual transaction"}</p>
+        <p className="text-muted-foreground text-sm mt-1">{isAr ? "إنشاء معاملة يدوية" : "Create a manual transaction"}</p>
       </div>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{isAr ? "تفاصيل المعاملة" : "Transaction Details"}</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-lg">{isAr ? "تفاصيل المعاملة" : "Transaction Details"}</CardTitle></CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
             <Label>{isAr ? "العميل *" : "Client *"}</Label>
@@ -120,51 +117,37 @@ export function AdminNewTransaction() {
             </select>
           </div>
           <div className="space-y-2">
-            <Label>{isAr ? "نوع المعاملة *" : "Transaction Type *"}</Label>
+            <Label>{isAr ? "النوع *" : "Type *"}</Label>
             <select value={type} onChange={e => setType(e.target.value)} className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm">
               <option value="">{isAr ? "اختر النوع" : "Select type"}</option>
-              {types.map(t => <option key={t.value} value={t.value}>{isAr ? t.ar : t.en}</option>)}
+              {TYPES.map(t => <option key={t.value} value={t.value}>{isAr ? t.ar : t.en}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{isAr ? "المبلغ *" : "Amount *"}</Label>
-              <Input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
-            </div>
-            <div className="space-y-2">
-              <Label>{isAr ? "العملة" : "Currency"}</Label>
+            <div className="space-y-2"><Label>{isAr ? "المبلغ *" : "Amount *"}</Label><Input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></div>
+            <div className="space-y-2"><Label>{isAr ? "العملة" : "Currency"}</Label>
               <select value={currency} onChange={e => setCurrency(e.target.value)} className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm">
-                <option value="USD">USD</option>
-                <option value="USDT">USDT</option>
-                <option value="BTC">BTC</option>
-                <option value="ETH">ETH</option>
+                <option value="USD">USD</option><option value="USDT">USDT</option><option value="BTC">BTC</option><option value="ETH">ETH</option>
               </select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>{isAr ? "الحالة" : "Status"}</Label>
+          <div className="space-y-2"><Label>{isAr ? "الحالة" : "Status"}</Label>
             <select value={status} onChange={e => setStatus(e.target.value)} className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm">
-              {statuses.map(s => <option key={s.value} value={s.value}>{isAr ? s.ar : s.en}</option>)}
+              {STATUSES.map(s => <option key={s.value} value={s.value}>{isAr ? s.ar : s.en}</option>)}
             </select>
           </div>
-          <div className="space-y-2">
-            <Label>{isAr ? "الوصف" : "Description"}</Label>
-            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder={isAr ? "وصف المعاملة (اختياري)" : "Transaction description (optional)"} />
-          </div>
-          <div className="space-y-2">
-            <Label>{isAr ? "تعليق الأدمن" : "Admin Comment"}</Label>
-            <Textarea value={adminComment} onChange={e => setAdminComment(e.target.value)} placeholder={isAr ? "ملاحظة تظهر للعميل في الإشعار..." : "Note shown to client in notification..."} />
-          </div>
+          <div className="space-y-2"><Label>{isAr ? "الوصف" : "Description"}</Label><Input value={description} onChange={e => setDescription(e.target.value)} placeholder={isAr ? "وصف المعاملة" : "Description"} /></div>
+          <div className="space-y-2"><Label>{isAr ? "تعليق" : "Comment"}</Label><Textarea value={adminComment} onChange={e => setAdminComment(e.target.value)} placeholder={isAr ? "ملاحظة للعميل" : "Note for client"} /></div>
           <div className="flex items-center gap-3">
             <input type="checkbox" id="sendNotif" checked={sendNotif} onChange={e => setSendNotif(e.target.checked)} className="rounded" />
-            <Label htmlFor="sendNotif" className="cursor-pointer text-sm">{isAr ? "إرسال إشعار للعميل" : "Send notification to client"}</Label>
+            <Label htmlFor="sendNotif" className="cursor-pointer text-sm">{isAr ? "إرسال إشعار" : "Send notification"}</Label>
           </div>
         </CardContent>
         <CardFooter>
           <Button onClick={handleSubmit} disabled={saving || done} className="w-full" size="lg">
-            {saving ? <><LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> {isAr ? "جاري الإضافة..." : "Adding..."}</> :
-             done ? <><CheckCircle2 className="h-4 w-4 mr-2" /> {isAr ? "تمت الإضافة ✓" : "Added ✓"}</> :
-             <><CirclePlus className="h-4 w-4 mr-2" /> {isAr ? "إضافة المعاملة" : "Add Transaction"}</>}
+            {saving ? <><LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> {isAr ? "جاري..." : "Adding..."}</> :
+             done ? <><CheckCircle2 className="h-4 w-4 mr-2" /> {isAr ? "✓ تمت" : "✓ Added"}</> :
+             <><CirclePlus className="h-4 w-4 mr-2" /> {isAr ? "إضافة" : "Add Transaction"}</>}
           </Button>
         </CardFooter>
       </Card>

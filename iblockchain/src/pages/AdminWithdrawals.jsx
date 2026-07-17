@@ -44,14 +44,28 @@ export function AdminWithdrawals() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       const prof = getProfile(selected.user_id);
+      const clientName = prof?.full_name || prof?.email || "Unknown";
       const msg = note
         ? `$${Number(selected.amount).toLocaleString()} - ${selected.network}\n${note}`
         : `$${Number(selected.amount).toLocaleString()} - ${selected.network}`;
       await supabase.from("notifications").insert({
         user_id: selected.user_id,
-        title: status === "approved" ? (isAr ? "? ??? ???????? ??? ?????" : "? Withdrawal Approved") : (isAr ? "? ?? ??? ?????" : "? Withdrawal Rejected"),
+        title: status === "approved" ? (isAr ? "✅ تمت الموافقة على السحب" : "✅ Withdrawal Approved") : (isAr ? "❌ تم رفض السحب" : "❌ Withdrawal Rejected"),
         message: msg,
       });
+      // Create transaction_log entry
+      const logDesc = `${isAr ? "سحب" : "Withdrawal"} ${status === "approved" ? (isAr ? "مقبول" : "approved") : status === "rejected" ? (isAr ? "مرفوض" : "rejected") : status} - ${selected.network}`;
+      const fullDesc = note ? `${logDesc} | ${note}` : logDesc;
+      const { data: existingLog } = await supabase.from("transaction_log").select("id").eq("reference_id", selected.id).eq("type", "withdrawal").limit(1);
+      if (existingLog && existingLog.length > 0) {
+        await supabase.from("transaction_log").update({ status, description: fullDesc, metadata: { network: selected.network, wallet_address: selected.wallet_address, admin_note: note || null, client_name: clientName } }).eq("id", existingLog[0].id);
+      } else {
+        await supabase.from("transaction_log").insert({
+          user_id: selected.user_id, type: "withdrawal", amount: selected.amount, currency: "USD",
+          status, description: fullDesc, reference_id: selected.id,
+          metadata: { network: selected.network, wallet_address: selected.wallet_address, admin_note: note || null, client_name: clientName },
+        });
+      }
       toast({ title: "Updated", description: isAr ? "?? ????? ?????" : "Updated" });
       setOpen(false);
       fetchData();
