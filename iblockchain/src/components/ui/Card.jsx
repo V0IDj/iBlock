@@ -5,9 +5,14 @@ export const Card = forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-border bg-card text-card-foreground shadow-sm",
+      "rounded-2xl border text-card-foreground shadow-sm backdrop-blur-2xl",
       className
     )}
+    style={{
+      background: "rgba(255, 255, 255, 0.55)",
+      borderColor: "rgba(255, 255, 255, 0.7)",
+      boxShadow: "0 8px 32px rgba(56, 118, 209, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
+    }}
     {...props}
   />
 ));
