@@ -125,8 +125,8 @@ export function Landing() {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
                 <Shield className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("services.fraud")}</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">{t("services.fraudDesc")}</p>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("services.fraud.title")}</h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">{t("services.fraud.desc")}</p>
             </motion.div>
           </div>
 
@@ -141,8 +141,8 @@ export function Landing() {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
                 <TrendingUp className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("services.crypto")}</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">{t("services.cryptoDesc")}</p>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("services.crypto.title")}</h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">{t("services.crypto.desc")}</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 30 }}
@@ -186,8 +186,8 @@ export function Landing() {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
                 <Lock className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("services.legal")}</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">{t("services.legalDesc")}</p>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("services.legal.title")}</h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">{t("services.legal.desc")}</p>
             </motion.div>
           </div>
         </div>

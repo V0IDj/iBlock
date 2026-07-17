@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { Globe, Users, Award, Shield, CircleCheckBig } from "lucide-react";
@@ -7,17 +6,17 @@ export function TrustSection() {
   const { t, isRTL } = useLanguage();
 
   const trustPoints = [
-    { title: t("trust.expert"), desc: t("trust.expertDesc"), icon: CircleCheckBig },
-    { title: t("trust.privacy"), desc: t("trust.privacyDesc"), icon: CircleCheckBig },
-    { title: t("trust.noUpfront"), desc: t("trust.noUpfrontDesc"), icon: CircleCheckBig },
-    { title: t("trust.global"), desc: t("trust.globalDesc"), icon: CircleCheckBig },
+    { key: "experts", icon: CircleCheckBig },
+    { key: "privacy", icon: CircleCheckBig },
+    { key: "nofees", icon: CircleCheckBig },
+    { key: "network", icon: CircleCheckBig },
   ];
 
   const statCards = [
-    { icon: Globe, value: "30+", label: t("trust.countries") || "Countries We Operate", primary: true },
-    { icon: Users, value: "50+", label: t("trust.experts") || "Experts", primary: false },
-    { icon: Award, value: "10+", label: t("trust.years") || "Years Experience", primary: false },
-    { icon: Shield, value: "100%", label: t("trust.reliability") || "Reliability", primary: true },
+    { icon: Globe, value: "30+", labelKey: "about.countries", primary: true },
+    { icon: Users, value: "50+", labelKey: "about.expertsNum", primary: false },
+    { icon: Award, value: "10+", labelKey: "about.experience", primary: false },
+    { icon: Shield, value: "100%", labelKey: "about.reliability", primary: true },
   ];
 
   return (
@@ -30,13 +29,13 @@ export function TrustSection() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              {t("trust.title")} <span className="text-gradient">iBlockchain</span>؟
+              {t("about.title")} <span className="text-gradient">iBlockchain</span>؟
             </h2>
-            <p className="text-muted-foreground mb-8 text-lg">{t("trust.subtitle")}</p>
+            <p className="text-muted-foreground mb-8 text-lg">{t("about.description")}</p>
             <div className="space-y-5">
               {trustPoints.map((point, i) => (
                 <motion.div
-                  key={i}
+                  key={point.key}
                   initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
@@ -47,8 +46,8 @@ export function TrustSection() {
                     <point.icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold">{point.title}</h4>
-                    <p className="text-muted-foreground text-sm">{point.desc}</p>
+                    <h4 className="font-semibold">{t(`about.${point.key}.title`)}</h4>
+                    <p className="text-muted-foreground text-sm">{t(`about.${point.key}.desc`)}</p>
                   </div>
                 </motion.div>
               ))}
@@ -79,7 +78,7 @@ export function TrustSection() {
                 >
                   <stat.icon className={`h-8 w-8 mb-2 ${stat.primary ? "text-primary" : "text-muted-foreground"}`} />
                   <div className="text-2xl font-bold mb-0.5">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
+                  <div className="text-xs text-muted-foreground">{t(stat.labelKey)}</div>
                 </motion.div>
               ))}
             </div>

@@ -39,7 +39,7 @@ export function Navbar() {
             {t("nav.about")}
           </Link>
           <a href="#process" className="text-muted-foreground hover:text-primary transition-colors">
-            {t("nav.howItWorks")}
+            {t("nav.process")}
           </a>
           <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors">
             {t("nav.contact")}
@@ -107,7 +107,7 @@ export function Navbar() {
                 { label: t("nav.services"), href: "#services" },
                 { label: language === "ar" ? "أسعار العملات" : "Prices", to: "/prices" },
                 { label: t("nav.about"), to: "/about-us" },
-                { label: t("nav.howItWorks"), href: "#process" },
+                { label: t("nav.process"), href: "#process" },
                 { label: t("nav.contact"), href: "#contact" },
               ].map((link, i) =>
                 link.to ? (

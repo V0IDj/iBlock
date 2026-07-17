@@ -3,9 +3,9 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { Shield, ChartColumn, Fingerprint } from "lucide-react";
 
 const services = [
-  { icon: Shield, title: t => t("services.transparency"), desc: t => t("services.transparencyDesc") },
-  { icon: ChartColumn, title: t => t("services.integration"), desc: t => t("services.integrationDesc") },
-  { icon: Fingerprint, title: t => t("services.security"), desc: t => t("services.securityDesc") },
+  { icon: Shield, key: "transparency" },
+  { icon: ChartColumn, key: "integration" },
+  { icon: Fingerprint, key: "security" },
 ];
 
 export function ServicesSection() {
@@ -20,8 +20,8 @@ export function ServicesSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">{t("services.title")}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("services.subtitle")}</p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">{t("features.title")}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("features.subtitle")}</p>
         </motion.div>
         <div className="grid md:grid-cols-3 gap-6">
           {services.map((svc, i) => (
@@ -37,8 +37,8 @@ export function ServicesSection() {
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all duration-500 group-hover:shadow-gold-md">
                 <svc.icon className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-3">{svc.title(t)}</h3>
-              <p className="text-muted-foreground leading-relaxed">{svc.desc(t)}</p>
+              <h3 className="text-xl font-bold mb-3">{t(`features.${svc.key}.title`)}</h3>
+              <p className="text-muted-foreground leading-relaxed">{t(`features.${svc.key}.desc`)}</p>
             </motion.div>
           ))}
         </div>
