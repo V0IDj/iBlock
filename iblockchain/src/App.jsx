@@ -32,6 +32,7 @@ const AdminAudit = lazy(() => import("./pages/AdminAudit").then((m) => ({ defaul
 const AdminMessages = lazy(() => import("./pages/AdminMessages").then((m) => ({ default: m.AdminMessages })));
 const AdminNewTransaction = lazy(() => import("./pages/AdminNewTransaction").then((m) => ({ default: m.AdminNewTransaction })));
 const AdminMarket = lazy(() => import("./pages/AdminMarket").then((m) => ({ default: m.AdminMarket })));
+const DashboardSupport = lazy(() => import("./pages/DashboardSupport").then((m) => ({ default: m.DashboardSupport })));
 
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
@@ -116,7 +117,7 @@ export default function App() {
                 <Route path="portfolio" element={<DashboardPlaceholder title="Portfolio" />} />
                 <Route path="staking" element={<DashboardPlaceholder title="Staking" />} />
                 <Route path="referral" element={<DashboardPlaceholder title="Referral" />} />
-                <Route path="support" element={<DashboardPlaceholder title="Support" />} />
+                <Route path="support" element={<DashboardSupport />} />
               </Route>
 
               <Route
