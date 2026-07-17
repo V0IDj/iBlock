@@ -250,6 +250,10 @@ body {
   background: linear-gradient(135deg, #2474f5, #1e3fae, #24248f);
 }
 
+.bg-hero-pattern {
+  background-image: radial-gradient(ellipse at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 60%);
+}
+
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbcfd7; border-radius: 10px; }
