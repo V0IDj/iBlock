@@ -77,7 +77,7 @@ const staticText = {
   ar: { tagline: "بوابتك الموثوقة لاسترداد الأصول الرقمية", rights: "جميع الحقوق محفوظة." },
 };
 
-export function EnhancedFooter() {
+export function EnhancedFooter({ year = 2026 }) {
   const { language, isRTL } = useLanguage();
   const links = footerData[language] || footerData.en;
   const text = staticText[language] || staticText.en;
@@ -136,9 +136,9 @@ export function EnhancedFooter() {
               {language === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
             </Link>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © 2026 <span className="text-primary">iBlockchain</span>. {text.rights}
-          </p>
+            <p className="text-sm text-muted-foreground">
+              © {year} <span className="text-primary">iBlockchain</span>. {text.rights}
+            </p>
         </div>
       </div>
     </footer>
