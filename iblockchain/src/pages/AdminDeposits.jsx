@@ -50,9 +50,22 @@ export function AdminDeposits() {
         : `$${Number(selected.amount).toLocaleString()} - ${selected.crypto_symbol}`;
       await supabase.from("notifications").insert({
         user_id: selected.user_id,
-        title: status === "approved" ? (isAr ? "? ??? ???????? ??? ???????" : "? Deposit Approved") : (isAr ? "? ?? ??? ???????" : "? Deposit Rejected"),
+        title: status === "approved" ? (isAr ? "✅ تمت الموافقة على الإيداع" : "✅ Deposit Approved") : (isAr ? "❌ تم رفض الإيداع" : "❌ Deposit Rejected"),
         message: msg,
       });
+      // Create transaction_log entry
+      const logDesc = `${isAr ? "إيداع" : "Deposit"} ${status === "approved" ? (isAr ? "مقبول" : "approved") : status === "rejected" ? (isAr ? "مرفوض" : "rejected") : status} - ${selected.crypto_symbol}`;
+      const fullDesc = comment ? `${logDesc} | ${comment}` : logDesc;
+      const { data: existingLog } = await supabase.from("transaction_log").select("id").eq("reference_id", selected.id).eq("type", "deposit").limit(1);
+      if (existingLog && existingLog.length > 0) {
+        await supabase.from("transaction_log").update({ status, description: fullDesc, metadata: { crypto_symbol: selected.crypto_symbol, tx_hash: selected.tx_hash, admin_comment: comment || null, client_name: clientName } }).eq("id", existingLog[0].id);
+      } else {
+        await supabase.from("transaction_log").insert({
+          user_id: selected.user_id, type: "deposit", amount: selected.amount, currency: "USD",
+          status, description: fullDesc, reference_id: selected.id,
+          metadata: { crypto_symbol: selected.crypto_symbol, tx_hash: selected.tx_hash, admin_comment: comment || null, client_name: clientName },
+        });
+      }
       toast({ title: "Updated", description: isAr ? "?? ????? ?????" : "Deposit updated" });
       setOpen(false);
       fetchData();

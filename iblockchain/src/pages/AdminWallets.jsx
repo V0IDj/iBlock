@@ -19,6 +19,7 @@ const coinMeta = {
 
 export function AdminWallets() {
   const { language } = useLanguage();
+  const { isSuperAdmin } = useAdmin();
   const { toast } = useToast();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,13 @@ export function AdminWallets() {
     const { error } = await supabase.from("deposit_wallets").update({ wallet_address: wallet.wallet_address, network: wallet.network, is_active: wallet.is_active }).eq("id", wallet.id);
     toast(error ? { title: "Error", variant: "destructive" } : { title: "Saved", description: `${wallet.crypto_symbol} updated` });
     setSavingId(null);
+  };
+
+  const deleteWallet = async (wallet) => {
+    if (!confirm(isAr ? `هل تريد حذف محفظة ${wallet.crypto_symbol}؟` : `Delete ${wallet.crypto_symbol} wallet?`)) return;
+    const { error } = await supabase.from("deposit_wallets").delete().eq("id", wallet.id);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Deleted" }); setWallets(w => w.filter(w => w.id !== wallet.id)); }
   };
 
   const addWallet = async () => {
@@ -108,6 +116,7 @@ export function AdminWallets() {
               <Button onClick={() => saveWallet(w)} disabled={savingId === w.id} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />{savingId === w.id ? (isAr ? "جاري الحفظ..." : "Saving...") : (isAr ? "حفظ التغييرات" : "Save Changes")}
               </Button>
+              {isSuperAdmin && <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteWallet(w)}><Trash2 className="h-4 w-4" /></Button>}
             </div>
           );
         })}
