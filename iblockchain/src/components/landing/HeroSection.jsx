@@ -1,76 +1,143 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Button } from "../ui/Button";
-import { Shield, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+
+const coinIcons = [
+  { icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/1.png", delay: 0, x: "10%", y: "20%" },
+  { icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png", delay: 0.5, x: "80%", y: "15%" },
+  { icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/825.png", delay: 1, x: "15%", y: "70%" },
+  { icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png", delay: 1.5, x: "85%", y: "65%" },
+  { icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/52.png", delay: 2, x: "5%", y: "45%" },
+  { icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png", delay: 2.5, x: "92%", y: "40%" },
+];
 
 export function HeroSection() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden mesh-bg">
-      <div className="absolute inset-0 grid-pattern opacity-30" />
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse-slow" />
+    <section className="relative pt-32 pb-8 px-4 min-h-screen flex items-center">
+      <div className="absolute inset-0 mesh-bg" />
+      <div className="absolute inset-0 grid-pattern" />
 
-      <div className="container mx-auto px-4 py-20 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* Background glow orbs */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-primary/8 blur-[180px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-500/5 blur-[120px]" />
+
+      {/* Floating coins with particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(8)].map((_, i) => (
           <motion.div
-            initial={{ opacity: 0, x: isRTL ? 50 : -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            key={`particle-${i}`}
+            className="absolute w-1 h-1 rounded-full bg-primary/30"
+            style={{ left: `${10 + 12 * i}%`, top: `${20 + (i % 3) * 25}%` }}
+            animate={{ y: [0, -30, 0], x: [0, 15, 0], opacity: [0.2, 0.5, 0.2], scale: [1, 1.5, 1] }}
+            transition={{ duration: 8 + 0.5 * i, delay: 0.7 * i, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+        {coinIcons.map((coin, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            style={{ left: coin.x, top: coin.y }}
+            animate={{ y: [0, -18, 0], opacity: [0.15, 0.35, 0.15] }}
+            transition={{ duration: 7, delay: coin.delay, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary mb-6">
-              <Shield className="h-4 w-4" />
-              <span>{t("hero.badge")}</span>
-            </div>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              {t("hero.title").split("\n").map((line, i) => (
-                <span key={i}>
-                  {i > 0 && <br />}
-                  {line.includes("Security") || line.includes("الثقة") ? (
-                    <span className="text-gradient">{line}</span>
-                  ) : (
-                    line
-                  )}
-                </span>
-              ))}
-            </h1>
-
-            <p className="text-lg text-muted-foreground mb-8 max-w-lg">
-              {t("hero.subtitle")}
-            </p>
-
-            <div className="flex items-center gap-4">
-              <Button size="lg" variant="premium" asChild>
-                <Link to="/auth?mode=signup">
-                  {t("nav.getStarted")}
-                  <ArrowRight className={`h-5 w-5 ${isRTL ? "mr-2" : "ml-2"}`} />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/auth">{t("nav.login")}</Link>
-              </Button>
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl scale-150" />
+              <img src={coin.icon} alt="" className="w-10 h-10 md:w-14 md:h-14 relative z-10 drop-shadow-lg" />
             </div>
           </motion.div>
+        ))}
+      </div>
+
+      <div className="container mx-auto relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-8"
+            >
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm text-muted-foreground">{t("hero.badge")}</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+            >
+              {t("hero.title1")}<br />
+              <span className="text-gradient">{t("hero.title2")}</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-10"
+            >
+              {t("hero.description")}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-start gap-4"
+            >
+              <Link to="/auth?mode=signup">
+                <button className="inline-flex items-center gap-2 text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl glow-primary-strong transition-all">
+                  {t("hero.cta")}
+                  <ArrowRight className={`h-5 w-5 ${isRTL ? "mr-2 rotate-180" : "ml-2"}`} />
+                </button>
+              </Link>
+            </motion.div>
+          </div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.6, y: 60 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.4, type: "spring", stiffness: 80, damping: 15 }}
+            className="hidden lg:flex justify-center relative"
           >
-            <div className="relative w-64 h-64 md:w-80 md:h-80">
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse-glow" />
-              <div className="absolute inset-4 border-2 border-primary/30 rounded-full animate-rotate-slow" />
-              <div className="absolute inset-8 border-2 border-emerald-500/20 rounded-full animate-rotate-slow" style={{ animationDirection: "reverse" }} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-2xl bg-primary/10 backdrop-blur-xl border border-primary/20 flex items-center justify-center animate-float">
-                  <Shield className="h-12 w-12 text-primary" />
-                </div>
-              </div>
-            </div>
+            {/* Pulsing orbs behind the shield */}
+            <motion.div
+              animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-primary/20 blur-[80px]"
+            />
+            <motion.div
+              animate={{ scale: [1.1, 1, 1.1], opacity: [0.2, 0.4, 0.2] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] rounded-full bg-blue-400/15 blur-[60px]"
+            />
+
+            <motion.div
+              animate={{ y: [0, -18, 0], rotateY: [0, 5, 0, -5, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="relative z-10"
+              style={{ perspective: "1000px" }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] rounded-full border border-primary/20"
+                style={{ boxShadow: "inset 0 0 30px hsl(var(--primary) / 0.1)" }}
+              />
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-primary/10 rounded-full blur-xl" />
+              <img
+                src="/assets/hero-shield-DaZnkDUG.png"
+                alt="Blockchain Security Shield"
+                className="w-[380px] md:w-[440px] drop-shadow-2xl relative z-10"
+                width={1024}
+                height={1024}
+                style={{ filter: "drop-shadow(0 20px 40px rgba(59, 130, 246, 0.3)) drop-shadow(0 0 60px rgba(59, 130, 246, 0.15))" }}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>

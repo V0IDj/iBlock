@@ -56,7 +56,7 @@ export function TermsOfService() {
         </div>
       </section>
 
-      <EnhancedFooter />
+      <EnhancedFooter year={2024} />
     </div>
   );
 }

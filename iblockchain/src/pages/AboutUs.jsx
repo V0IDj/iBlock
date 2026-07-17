@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Button } from "../components/ui/Button";
 import { ArrowLeft, Wallet, Shield, CreditCard, Lock, Headphones, Scale, Server, ShieldCheck } from "lucide-react";
-import { EnhancedFooter } from "../components/landing/EnhancedFooter";
 
 const solutions = [
   { key: "wallets", icon: Wallet },
@@ -118,7 +117,9 @@ export function AboutUs() {
         </div>
       </section>
 
-      <EnhancedFooter />
+      <div className="border-t border-border mt-16 py-6 text-center text-sm text-muted-foreground">
+        © 2024 iBlockchain. All Rights Reserved.
+      </div>
     </div>
   );
 }
