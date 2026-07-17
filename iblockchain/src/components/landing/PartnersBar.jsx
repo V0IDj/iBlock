@@ -1,40 +1,38 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-const partners = [
-  { name: "Chainlink", icon: "🔗" },
-  { name: "CoinBase", icon: "🔵" },
-  { name: "Binance", icon: "🟡" },
-  { name: "Ledger", icon: "🟠" },
-  { name: "MetaMask", icon: "🦊" },
-  { name: "Trezor", icon: "🟢" },
-];
+const partners = ["Chainlink", "CoinBase", "Binance", "Ledger", "MetaMask", "Trezor"];
 
 export function PartnersBar() {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
 
   return (
-    <section className="py-12 border-y border-border/50">
+    <div className="py-12 border-y border-border bg-card/30 overflow-hidden">
       <div className="container mx-auto px-4">
-        <p className="text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-8">
-          Featured on major global platforms
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-          {partners.map((partner, i) => (
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center text-sm text-muted-foreground mb-8"
+        >
+          {language === "ar" ? "تم عرضنا على أبرز المنصات العالمية" : "Featured on major global platforms"}
+        </motion.p>
+        <div className="flex items-center justify-center gap-6 md:gap-12 flex-wrap">
+          {partners.map((name, i) => (
             <motion.div
-              key={partner.name}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              key={name}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="flex items-center gap-2 text-lg font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              transition={{ duration: 0.4, delay: 0.08 * i }}
+              whileHover={{ scale: 1.1, y: -4 }}
+              className="px-5 py-2.5 rounded-xl border border-border bg-card/60 shadow-sm backdrop-blur-sm"
             >
-              <span className="text-2xl">{partner.icon}</span>
-              <span>{partner.name}</span>
+              <span className="text-sm font-bold text-muted-foreground/60 tracking-wider">{name}</span>
             </motion.div>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,13 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
-import { Textarea } from "../ui/Textarea";
-import { Select } from "../ui/Select";
-import { Label } from "../ui/Label";
+import { supabase } from "../../lib/supabase";
 import { useToast } from "../../hooks/useToast";
-import { Send } from "lucide-react";
+import { Send, LoaderCircle } from "lucide-react";
 
 const countries = [
   "United States", "United Kingdom", "Canada", "Australia", "Germany", "France",
@@ -22,81 +18,121 @@ const countries = [
 export function ContactSection() {
   const { t, isRTL, language } = useLanguage();
   const { toast } = useToast();
-  const [form, setForm] = useState({ country: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", country: "", phone: "", message: "" });
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast({ title: "Message sent", description: "We will get back to you soon." });
-    setForm({ country: "", subject: "", message: "" });
+    setSending(true);
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: form.name,
+        email: form.email,
+        country: form.country,
+        phone: form.phone,
+        message: form.message,
+      });
+      if (error) throw error;
+      toast({ title: t("contact.success") || "Message sent", description: t("contact.successDesc") || "We will get back to you soon." });
+      setForm({ name: "", email: "", country: "", phone: "", message: "" });
+    } catch (err) {
+      toast({ title: t("contact.error") || "Error", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-    <section id="contact" className="py-20">
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12">
+    <section id="contact" className="py-20 px-4 bg-card/30">
+      <div className="container mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, x: isRTL ? 50 : -50 }}
+            initial={{ opacity: 0, x: isRTL ? 30 : -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
+            className="glass-card rounded-2xl p-8"
           >
-            <span className="text-xs font-semibold tracking-widest text-primary uppercase">
-              Contact Us
-            </span>
-            <p className="text-muted-foreground mt-6 leading-relaxed">
-              {t("contact.title")}
-            </p>
-          </motion.div>
-
-          <motion.form
-            initial={{ opacity: 0, x: isRTL ? -50 : 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            onSubmit={handleSubmit}
-            className="glass-card rounded-2xl p-8 space-y-6"
-          >
-            <div>
-              <Label htmlFor="country">{t("contact.country")}</Label>
-              <Select
-                id="country"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                placeholder={language === "ar" ? "الاسم الكامل" : "Full Name"}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                className="w-full h-14 text-lg bg-background/50 border border-border/50 rounded-xl px-4 outline-none focus:ring-2 focus:ring-ring"
+              />
+              <input
+                type="email"
+                placeholder={language === "ar" ? "البريد الإلكتروني" : "Email Address"}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                className="w-full h-14 text-lg bg-background/50 border border-border/50 rounded-xl px-4 outline-none focus:ring-2 focus:ring-ring"
+              />
+              <select
                 value={form.country}
                 onChange={(e) => setForm({ ...form, country: e.target.value })}
-                className="mt-1.5"
-                required
+                className="w-full h-14 text-lg bg-background/50 border border-border/50 rounded-xl px-4 outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">{t("contact.country")}</option>
+                <option value="">{language === "ar" ? "اختر الدولة" : "Select Country"}</option>
                 {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="subject">{t("contact.subject")}</Label>
-              <Input
-                id="subject"
-                value={form.subject}
-                onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                className="mt-1.5"
-                required
+              </select>
+              <input
+                type="tel"
+                placeholder={language === "ar" ? "رقم الهاتف" : "Phone Number"}
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full h-14 text-lg bg-background/50 border border-border/50 rounded-xl px-4 outline-none focus:ring-2 focus:ring-ring"
               />
-            </div>
-            <div>
-              <Label htmlFor="message">{t("contact.message")}</Label>
-              <Textarea
-                id="message"
+              <textarea
+                placeholder={language === "ar" ? "رسالتك" : "Your Message"}
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
-                className="mt-1.5"
-                rows={5}
                 required
+                rows={5}
+                className="w-full text-lg bg-background/50 border border-border/50 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-ring resize-none"
               />
-            </div>
-            <Button type="submit" variant="premium" className="w-full">
-              <Send className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-              {t("contact.send")}
-            </Button>
-          </motion.form>
+              <button
+                type="submit"
+                disabled={sending}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground h-14 px-8 text-lg rounded-xl glow-primary transition-all disabled:opacity-50"
+              >
+                {sending ? (
+                  <LoaderCircle className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`} />
+                )}
+                {sending
+                  ? (language === "ar" ? "جاري الإرسال..." : "Sending...")
+                  : (language === "ar" ? "إرسال الرسالة" : "Send Message")}
+              </button>
+            </form>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: isRTL ? -30 : 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col justify-center"
+          >
+            <span className="text-primary font-semibold tracking-widest mb-4">
+              {language === "ar" ? "تواصل معنا" : "Contact Us"}
+            </span>
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight">
+              <span className="text-foreground">
+                {language === "ar" ? "لأي استفسارات،" : "For any inquiries,"}
+              </span>{" "}
+              <span className="text-primary">
+                {language === "ar" ? "لا تتردد في التواصل معنا." : "feel free to reach out."}
+              </span>{" "}
+              <span className="text-primary">
+                {language === "ar" ? "فريقنا متاح وجاهز لمساعدتك." : "Our team is available and ready to assist you."}
+              </span>{" "}
+              <span className="text-foreground">
+                {language === "ar" ? "سنرد على رسالتك في أقرب وقت ممكن." : "We will respond to your message as soon as possible."}
+              </span>
+            </h2>
+          </motion.div>
         </div>
       </div>
     </section>
