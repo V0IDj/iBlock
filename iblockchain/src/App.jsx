@@ -33,6 +33,19 @@ const AdminMessages = lazy(() => import("./pages/AdminMessages").then((m) => ({ 
 const AdminNewTransaction = lazy(() => import("./pages/AdminNewTransaction").then((m) => ({ default: m.AdminNewTransaction })));
 const AdminMarket = lazy(() => import("./pages/AdminMarket").then((m) => ({ default: m.AdminMarket })));
 const DashboardSupport = lazy(() => import("./pages/DashboardSupport").then((m) => ({ default: m.DashboardSupport })));
+const DashboardDeposit = lazy(() => import("./pages/DashboardDeposit").then((m) => ({ default: m.DashboardDeposit })));
+const DashboardWithdrawal = lazy(() => import("./pages/DashboardWithdrawal").then((m) => ({ default: m.DashboardWithdrawal })));
+const DashboardTransactions = lazy(() => import("./pages/DashboardTransactions").then((m) => ({ default: m.DashboardTransactions })));
+const DashboardNotifications = lazy(() => import("./pages/DashboardNotifications").then((m) => ({ default: m.DashboardNotifications })));
+const DashboardAccount = lazy(() => import("./pages/DashboardAccount").then((m) => ({ default: m.DashboardAccount })));
+const DashboardPrices = lazy(() => import("./pages/DashboardPrices").then((m) => ({ default: m.DashboardPrices })));
+const DashboardSwap = lazy(() => import("./pages/DashboardSwap").then((m) => ({ default: m.DashboardSwap })));
+const DashboardMarket = lazy(() => import("./pages/DashboardMarket").then((m) => ({ default: m.DashboardMarket })));
+const DashboardMarkets = lazy(() => import("./pages/DashboardMarkets").then((m) => ({ default: m.DashboardMarkets })));
+const DashboardBuySell = lazy(() => import("./pages/DashboardBuySell").then((m) => ({ default: m.DashboardBuySell })));
+const DashboardPortfolio = lazy(() => import("./pages/DashboardPortfolio").then((m) => ({ default: m.DashboardPortfolio })));
+const DashboardStaking = lazy(() => import("./pages/DashboardStaking").then((m) => ({ default: m.DashboardStaking })));
+const DashboardReferral = lazy(() => import("./pages/DashboardReferral").then((m) => ({ default: m.DashboardReferral })));
 
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
@@ -58,17 +71,6 @@ function MarketsPreview() {
       <div className="container mx-auto">
         <h1 className="text-2xl font-bold mb-4">Markets Preview</h1>
         <p className="text-muted-foreground">Market data coming soon.</p>
-      </div>
-    </div>
-  );
-}
-
-function DashboardPlaceholder({ title }) {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold mb-2">{title}</h2>
-        <p className="text-muted-foreground">Content coming soon.</p>
       </div>
     </div>
   );
@@ -104,19 +106,19 @@ export default function App() {
                 }
               >
                 <Route index element={<DashboardOverview />} />
-                <Route path="deposit" element={<DashboardPlaceholder title="Deposit" />} />
-                <Route path="withdrawal" element={<DashboardPlaceholder title="Withdrawal" />} />
-                <Route path="transactions" element={<DashboardPlaceholder title="Transactions" />} />
-                <Route path="notifications" element={<DashboardPlaceholder title="Notifications" />} />
-                <Route path="account" element={<DashboardPlaceholder title="My Account" />} />
-                <Route path="prices" element={<DashboardPlaceholder title="Prices" />} />
-                <Route path="swap" element={<DashboardPlaceholder title="Swap" />} />
-                <Route path="market" element={<DashboardPlaceholder title="Market" />} />
-                <Route path="markets" element={<DashboardPlaceholder title="Markets" />} />
-                <Route path="buy-sell" element={<DashboardPlaceholder title="Buy & Sell" />} />
-                <Route path="portfolio" element={<DashboardPlaceholder title="Portfolio" />} />
-                <Route path="staking" element={<DashboardPlaceholder title="Staking" />} />
-                <Route path="referral" element={<DashboardPlaceholder title="Referral" />} />
+                <Route path="deposit" element={<DashboardDeposit />} />
+                <Route path="withdrawal" element={<DashboardWithdrawal />} />
+                <Route path="transactions" element={<DashboardTransactions />} />
+                <Route path="notifications" element={<DashboardNotifications />} />
+                <Route path="account" element={<DashboardAccount />} />
+                <Route path="prices" element={<DashboardPrices />} />
+                <Route path="swap" element={<DashboardSwap />} />
+                <Route path="market" element={<DashboardMarket />} />
+                <Route path="markets" element={<DashboardMarkets />} />
+                <Route path="buy-sell" element={<DashboardBuySell />} />
+                <Route path="portfolio" element={<DashboardPortfolio />} />
+                <Route path="staking" element={<DashboardStaking />} />
+                <Route path="referral" element={<DashboardReferral />} />
                 <Route path="support" element={<DashboardSupport />} />
               </Route>
 
