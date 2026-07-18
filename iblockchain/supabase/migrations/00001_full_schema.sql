@@ -203,9 +203,10 @@ alter table public.withdrawal_requests enable row level security;
 create table public.transaction_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(user_id) on delete cascade,
-  type text check (type in ('deposit', 'withdrawal', 'capital_update', 'profit_update', 'recovery_update')),
+  type text check (type in ('deposit', 'withdrawal', 'capital_update', 'profit_update', 'recovery_update', 'adjustment')),
   amount decimal,
   currency text default 'USD',
+  reference_id text,
   status text default 'pending' check (status in ('pending', 'approved', 'rejected', 'completed')),
   description text,
   metadata jsonb,
@@ -257,6 +258,7 @@ create table public.market_orders (
   order_type text check (order_type in ('buy', 'sell', 'trade')),
   amount decimal,
   status text default 'pending',
+  admin_note text,
   created_at timestamptz default now()
 );
 alter table public.market_orders enable row level security;
@@ -299,6 +301,7 @@ create table public.admin_audit_log (
   user_id uuid references public.profiles(user_id),
   action text,
   section text,
+  admin_email text,
   details jsonb,
   created_at timestamptz default now()
 );
@@ -312,6 +315,8 @@ create table public.contact_messages (
   name text,
   email text,
   subject text,
+  phone text,
+  country text,
   message text,
   created_at timestamptz default now()
 );

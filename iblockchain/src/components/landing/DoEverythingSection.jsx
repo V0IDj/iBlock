@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { ArrowUpFromLine, ArrowDownToLine, Repeat } from "lucide-react";
 
 const actions = [
-  { key: "send", icon: ArrowUpFromLine },
-  { key: "receive", icon: ArrowDownToLine },
-  { key: "swap", icon: Repeat },
+  { key: "send", img: "/assets/send-crypto-eoVmJPcx.jpg" },
+  { key: "receive", img: "/assets/receive-crypto-BjpslNZn.jpg" },
+  { key: "swap", img: "/assets/swap-crypto-rBO_9-5L.jpg" },
 ];
 
 export function DoEverythingSection() {
@@ -43,9 +42,7 @@ export function DoEverythingSection() {
               viewport={{ once: true }}
               className="glass-card rounded-2xl p-8 text-center hover:border-primary/30 transition-all duration-300"
             >
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                <action.icon className="h-8 w-8 text-primary" />
-              </div>
+              <img src={action.img} alt={t(`doEverything.${action.key}`)} className="w-full h-48 object-cover rounded-2xl mb-6" loading="lazy" />
               <h3 className="text-xl font-semibold mb-3">
                 {t(`doEverything.${action.key}`)}
               </h3>

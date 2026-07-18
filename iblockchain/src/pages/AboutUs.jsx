@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, Wallet, Shield, CreditCard, Lock, Headphones, Scale, Server, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Wallet, Shield, CreditCard, Lock, Headphones, Scale, Server, ShieldCheck, TrendingUp } from "lucide-react";
 
 const solutions = [
   { key: "wallets", icon: Wallet },
@@ -109,7 +109,38 @@ export function AboutUs() {
             </div>
           </div>
 
-          <div className="text-center">
+          {/* Why Choose Us */}
+          <div className="mb-20">
+            <h2 className="text-2xl font-bold mb-10 text-center">Why Choose Us?</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                { title: "Regulated & Secure", desc: "A fully compliant platform that adheres to global financial regulations, offering users peace of mind.", icon: Shield },
+                { title: "Enterprise-Grade Custodial Services", desc: "A sophisticated yet intuitive interface, designed to accommodate both retail and institutional investors.", icon: Server },
+                { title: "Scalability & Future-Proof Technology", desc: "A robust infrastructure that adapts to the evolving blockchain landscape, ensuring long-term reliability.", icon: TrendingUp },
+                { title: "Dedicated Customer Support", desc: "Unlike decentralized wallets, our clients benefit from 24/7 account recovery assistance and technical support.", icon: Headphones },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  className="glass-card rounded-2xl p-6"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <item.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Join the Future */}
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Join the Future of Digital Asset Management</h2>
+            <p className="text-muted-foreground mb-8">At iBlockchain, we don't just provide a service—we set the standard for secure, compliant, and scalable digital asset management.</p>
             <Button size="lg" variant="premium" asChild>
               <Link to="/auth?mode=signup">Get Started</Link>
             </Button>
