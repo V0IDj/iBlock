@@ -83,8 +83,7 @@ export default function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/kyc" element={<KYC />} />
-              <Route path="/kyc-pending" element={<KYCPending />} />
-              <Route path="/notification/:id" element={<NotificationDetail />} />
+              <Route path="/kyc/pending" element={<KYCPending />} />
 
               <Route
                 path="/dashboard"
@@ -99,6 +98,7 @@ export default function App() {
                 <Route path="withdrawal" element={<DashboardWithdrawal />} />
                 <Route path="transactions" element={<DashboardTransactions />} />
                 <Route path="notifications" element={<DashboardNotifications />} />
+                <Route path="notification/:id" element={<NotificationDetail />} />
                 <Route path="account" element={<DashboardAccount />} />
                 <Route path="prices" element={<DashboardPrices />} />
                 <Route path="swap" element={<DashboardSwap />} />

@@ -5,9 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { Button } from "../components/ui/Button";
 import { WalletCard } from "../components/dashboard/WalletCard";
 import { SecurityWarningBanner } from "../components/dashboard/SecurityWarningBanner";
+import { DashboardCryptoPrices } from "../components/dashboard/DashboardCryptoPrices";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Shield, TrendingUp, TrendingDown, DollarSign, Wallet, Bell, MessageSquare, X, AlertTriangle, Calendar, TriangleAlert } from "lucide-react";
+import { Shield, TrendingUp, TrendingDown, DollarSign, Bell, MessageSquare, X, Calendar, TriangleAlert } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
 function PaymentDueBanner({ amountDue, currency, paymentMessage, paymentDeadline }) {
@@ -165,41 +166,7 @@ export function DashboardOverview() {
         ))}
       </div>
 
-      <Card className="glass-card border-0">
-        <CardContent className="p-0">
-          <div className="divide-y divide-border">
-            {[
-              { id: "bitcoin", symbol: "btc", name: "Bitcoin", price: 64059.00, change: -0.23, image: "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png" },
-              { id: "ethereum", symbol: "eth", name: "Ethereum", price: 1841.13, change: -1.71, image: "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png" },
-              { id: "tether", symbol: "usdt", name: "Tether", price: 0.9993, change: -0.00, image: "https://coin-images.coingecko.com/coins/images/325/large/Tether.png" },
-              { id: "binancecoin", symbol: "bnb", name: "BNB", price: 566.17, change: -1.55, image: "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png" },
-              { id: "ripple", symbol: "xrp", name: "XRP", price: 1.09, change: -0.32, image: "https://coin-images.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png" },
-              { id: "solana", symbol: "sol", name: "Solana", price: 75.19, change: -0.64, image: "https://coin-images.coingecko.com/coins/images/4128/large/solana.png" },
-              { id: "tron", symbol: "trx", name: "TRON", price: 0.3227, change: -0.09, image: "https://coin-images.coingecko.com/coins/images/1094/large/photo_2026-04-13_09-59-16.png" },
-              { id: "dogecoin", symbol: "doge", name: "Dogecoin", price: 0.0727, change: -0.93, image: "https://coin-images.coingecko.com/coins/images/5/large/dogecoin.png" },
-              { id: "cardano", symbol: "ada", name: "Cardano", price: 0.1660, change: 2.50, image: "https://coin-images.coingecko.com/coins/images/975/large/cardano.png" },
-              { id: "avalanche-2", symbol: "avax", name: "Avalanche", price: 6.59, change: 0.13, image: "https://coin-images.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png" },
-            ].map((coin) => (
-              <div key={coin.id} className="flex items-center justify-between px-6 py-3 hover:bg-accent/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
-                  <div>
-                    <p className="font-medium text-sm text-foreground">{coin.name}</p>
-                    <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
-                  </div>
-                </div>
-                <div className="text-right min-w-[90px]">
-                  <p className="font-semibold text-sm text-foreground">${coin.price >= 1 ? coin.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : coin.price.toFixed(4)}</p>
-                  <p className={`text-xs flex items-center justify-end gap-0.5 ${coin.change >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                    {coin.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {coin.change >= 0 ? "+" : ""}{coin.change.toFixed(2)}%
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <DashboardCryptoPrices />
 
       <div className="grid md:grid-cols-2 gap-5">
         <Card className="glass-card border-0">
@@ -255,7 +222,7 @@ export function DashboardOverview() {
                 {notifs.slice(0, 5).map((n) => (
                   <div
                     key={n.id}
-                    onClick={() => navigate(`/notification/${n.id}`)}
+                    onClick={() => navigate(`/dashboard/notification/${n.id}`)}
                     className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-muted/50 ${n.is_read ? "" : "bg-primary/[0.03]"}`}
                   >
                     <div className="mt-1">

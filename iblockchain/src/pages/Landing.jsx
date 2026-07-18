@@ -14,6 +14,7 @@ import { LoaderCircle, ArrowRight, Shield, TrendingUp, Lock } from "lucide-react
 const PartnersBar = lazy(() => import("../components/landing/PartnersBar").then(m => ({ default: m.PartnersBar })));
 const WhyChooseSection = lazy(() => import("../components/landing/WhyChooseSection").then(m => ({ default: m.WhyChooseSection })));
 const SecurityHeroSection = lazy(() => import("../components/landing/SecurityHeroSection").then(m => ({ default: m.SecurityHeroSection })));
+const HowItWorksSection = lazy(() => import("../components/landing/HowItWorksSection").then(m => ({ default: m.HowItWorksSection })));
 const DoEverythingSection = lazy(() => import("../components/landing/DoEverythingSection").then(m => ({ default: m.DoEverythingSection })));
 const ExploreFeaturesGrid = lazy(() => import("../components/landing/ExploreFeaturesGrid").then(m => ({ default: m.ExploreFeaturesGrid })));
 const TestimonialsSection = lazy(() => import("../components/landing/TestimonialsSection").then(m => ({ default: m.TestimonialsSection })));
@@ -207,43 +208,9 @@ export function Landing() {
 
       <TrustSection />
 
-      {/* Process / How It Works */}
-      <section id="process" className="py-20 px-4">
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">{t("process.title")}</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">{t("process.subtitle")}</p>
-          </motion.div>
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { num: "1", title: t("process.step1.title"), desc: t("process.step1.desc") },
-              { num: "2", title: t("process.step2.title"), desc: t("process.step2.desc") },
-              { num: "3", title: t("process.step3.title"), desc: t("process.step3.desc") },
-              { num: "4", title: t("process.step4.title"), desc: t("process.step4.desc") },
-            ].map((step, i) => (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 * i }}
-                className="text-center relative"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-6 text-2xl font-bold glow-primary">
-                  {step.num}
-                </div>
-                <h3 className="font-bold text-lg mb-2">{step.title}</h3>
-                <p className="text-muted-foreground text-sm">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Suspense fallback={<SectionFallback />}>
+        <HowItWorksSection />
+      </Suspense>
 
       <Suspense fallback={<SectionFallback />}>
         <DoEverythingSection />

@@ -74,6 +74,7 @@ export function AdminProvider({ children }) {
         kycDocs,
         finances,
         setKycDocs,
+        setFinances,
         getClientFinance,
         isSuperAdmin,
         loading,

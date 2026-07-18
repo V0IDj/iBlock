@@ -4,10 +4,11 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useAdmin } from "../../contexts/AdminContext";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
+import { Sheet, SheetTrigger, SheetContent } from "../ui/Sheet";
 import {
   LayoutDashboard, Users, FileText, ArrowDownToLine, ArrowUpFromLine,
   History, MessageSquare, Store, CirclePlus, Wallet, ClipboardList,
-  Menu, X, Shield, LogOut, LayoutGrid, Sheet,
+  Menu, Shield, LogOut,
 } from "lucide-react";
 
 const navItems = [
@@ -144,14 +145,16 @@ export function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="md:hidden glass-nav px-4 py-3 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-xl">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side={isRTL ? "right" : "left"} className="p-0 w-[260px] glass-sidebar">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Shield className="h-5 w-5 text-primary" />
             </div>
@@ -165,20 +168,7 @@ export function AdminLayout() {
       </div>
 
       {sidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 z-50 w-[260px] glass-sidebar md:hidden">
-            <div className="absolute right-4 top-4">
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <SidebarContent />
-          </div>
-        </>
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
     </div>
   );

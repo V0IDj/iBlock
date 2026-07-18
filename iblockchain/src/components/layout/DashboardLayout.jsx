@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useDashboard } from "../../contexts/DashboardContext";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { ScrollArea } from "../ui/ScrollArea";
+import { Sheet, SheetTrigger, SheetContent } from "../ui/Sheet";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -118,7 +119,7 @@ function NotificationsDropdown({ notifications, unreadCount, onMarkAsRead, onMar
               const Icon = getIcon(n.title);
               return (
                 <div key={n.id} className={`p-3 cursor-pointer focus:bg-accent/50 ${n.is_read ? "" : "bg-primary/5"}`}
-                  onClick={() => { onMarkAsRead(n.id); navigate(`/notification/${n.id}`); }}>
+                  onClick={() => { onMarkAsRead(n.id); navigate(`/dashboard/notification/${n.id}`); }}>
                   <div className="flex items-start gap-3 w-full">
                     <div className="mt-0.5">
                       {n.title?.includes("رسالة") || n.title?.includes("message") ? <MessageSquare className="h-4 w-4 text-primary" /> :
@@ -289,9 +290,16 @@ export function DashboardLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="glass-nav sticky top-0 z-40 px-4 md:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="md:hidden glass-button rounded-xl" onClick={() => setSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon" className="glass-button rounded-xl">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side={isRTL ? "right" : "left"} className="p-0 w-[260px] glass-sidebar">
+                <SidebarContent />
+              </SheetContent>
+            </Sheet>
             <div className="md:hidden flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Shield className="h-4 w-4 text-primary-foreground" />
@@ -303,9 +311,13 @@ export function DashboardLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleLanguage} className="hidden sm:flex">
-              <Globe className="h-5 w-5" />
-            </Button>
+            <button
+              onClick={toggleLanguage}
+              className="hidden sm:inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 gap-2 text-muted-foreground hover:text-foreground hover:bg-white/10 border border-white/10 rounded-lg px-3"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="text-sm font-medium">{language === "en" ? "English" : "العربية"}</span>
+            </button>
             <NotificationsDropdown notifications={notifications} unreadCount={unreadCount} onMarkAsRead={markAsRead} onMarkAllAsRead={markAllAsRead} />
             <div className="hidden md:flex items-center gap-2 ml-2 glass-button rounded-xl px-3 py-2 cursor-pointer" onClick={() => navigate("/dashboard/account")}>
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -320,32 +332,6 @@ export function DashboardLayout() {
           <Outlet />
         </main>
       </div>
-
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 md:hidden"
-          >
-            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-            <motion.div
-              initial={{ x: isRTL ? "100%" : "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: isRTL ? "100%" : "-100%" }}
-              className="fixed inset-y-0 left-0 z-50 w-[260px] glass-sidebar"
-            >
-              <div className="absolute right-4 top-4">
-                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <SidebarContent />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

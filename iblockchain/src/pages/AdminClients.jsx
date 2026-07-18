@@ -38,7 +38,7 @@ export function AdminClients() {
   );
 
   const getClientKyc = (userId) => kycDocs.find(d => d.user_id === userId);
-  const getClientFinance = (userId) => finances.find(f => f.user_id === userId);
+  const getClientFinance = (userId) => finances[userId] || null;
 
   const saveFinances = async () => {
     if (!editFinance || !selectedClient) return;

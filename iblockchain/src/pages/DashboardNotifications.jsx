@@ -38,7 +38,7 @@ export function DashboardNotifications() {
       ) : (
         <div className="space-y-2">
           {notifications.map(n => (
-            <Card key={n.id} onClick={() => { markAsRead(n.id); navigate(`/notification/${n.id}`); }}
+            <Card key={n.id} onClick={() => { markAsRead(n.id); navigate(`/dashboard/notification/${n.id}`); }}
               className={`p-4 cursor-pointer transition-colors hover:bg-accent/50 ${n.is_read ? "" : "border-primary/30 bg-primary/5"}`}>
               <div className="flex items-start gap-3">
                 <div className="mt-1">

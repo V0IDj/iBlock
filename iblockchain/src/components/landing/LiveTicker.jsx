@@ -8,7 +8,7 @@ const defaultPrices = [
   { id: "binancecoin", symbol: "bnb", name: "BNB", image: "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1696501970", price: 564.49, change: -2.18 },
   { id: "ripple", symbol: "xrp", name: "XRP", image: "https://coin-images.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png?1696501442", price: 1.09, change: -1.86 },
   { id: "solana", symbol: "sol", name: "Solana", image: "https://coin-images.coingecko.com/coins/images/4128/large/solana.png?1718769756", price: 74.68, change: -1.85 },
-  { id: "tron", symbol: "trx", name: "TRON", image: "https://coin-images.coingecko.com/coins/images/1094/large/photo_2026-04-13_09-59-16.png?1776048311", price: 0.322, change: -0.36 },
+  { id: "tron", symbol: "trx", name: "TRON", image: "https://coin-images.coingecko.com/coins/images/1094/large/tron-logo.png", price: 0.322, change: -0.36 },
   { id: "dogecoin", symbol: "doge", name: "Dogecoin", image: "https://coin-images.coingecko.com/coins/images/5/large/dogecoin.png?1696501409", price: 0.0718, change: -1.90 },
   { id: "cardano", symbol: "ada", name: "Cardano", image: "https://coin-images.coingecko.com/coins/images/975/large/cardano.png?1696502090", price: 0.161, change: -0.58 },
   { id: "avalanche-2", symbol: "avax", name: "Avalanche", image: "https://coin-images.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png?1696512369", price: 6.49, change: -1.25 },

@@ -15,7 +15,8 @@ const cryptos = [
 ];
 const prices = { BTC: 67500, ETH: 3450, USDT: 1, SOL: 145, BNB: 610, XRP: 0.52 };
 
-const cryptoImage = (s) => `https://assets.coingecko.com/coins/images/${ {BTC:1,ETH:279,USDT:325,SOL:4128,BNB:825,XRP:44}[s] || 1}/small/${s.toLowerCase()}.png`;
+const coinFiles = { BTC: "bitcoin", ETH: "ethereum", USDT: "Tether", SOL: "solana", BNB: "bnb-icon2_2x", XRP: "xrp-symbol-white-128" };
+const cryptoImage = (s) => `https://assets.coingecko.com/coins/images/${ {BTC:1,ETH:279,USDT:325,SOL:4128,BNB:825,XRP:44}[s] || 1}/small/${coinFiles[s] || s.toLowerCase()}.png`;
 
 export function DashboardSwap() {
   const { language, isRTL } = useLanguage();
