@@ -1,6 +1,6 @@
 -- ============================================================
 -- iBlockchain Complete Database Schema
--- Run this in Supabase SQL Editor after creating a new project
+-- Run this in Supabase SQL Editor
 -- ============================================================
 
 -- 0. EXTENSIONS
@@ -21,7 +21,19 @@ create table public.verification_codes (
 alter table public.verification_codes enable row level security;
 
 -- ============================================================
--- 1. PROFILES
+-- 1. USER ROLES (created early because triggers need it)
+-- ============================================================
+create table public.user_roles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  role text not null check (role in ('user', 'admin', 'super_admin')),
+  created_at timestamptz default now(),
+  unique(user_id)
+);
+alter table public.user_roles enable row level security;
+
+-- ============================================================
+-- 2. PROFILES
 -- ============================================================
 create table public.profiles (
   id uuid primary key default gen_random_uuid(),
@@ -37,23 +49,37 @@ create table public.profiles (
 );
 alter table public.profiles enable row level security;
 
-create policy "Users can view own profile"
-  on public.profiles for select
-  using (auth.uid() = user_id);
+-- ============================================================
+-- 3. CLIENT FINANCES (created early because triggers need it)
+-- ============================================================
+create table public.client_finances (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  capital decimal default 0,
+  profits decimal default 0,
+  total_recovered decimal default 0,
+  currency text default 'USD',
+  notes text,
+  amount_due decimal default 0,
+  payment_due_message text,
+  payment_status text default 'none' check (payment_status in ('none', 'pending', 'paid')),
+  payment_deadline timestamptz,
+  admin_message text,
+  withdrawal_locked boolean default true,
+  withdrawal_lock_message text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id)
+);
+alter table public.client_finances enable row level security;
 
-create policy "Users can insert own profile"
-  on public.profiles for insert
-  with check (auth.uid() = user_id);
+-- Add FK constraints after tables exist
+alter table public.user_roles add constraint user_roles_user_id_fkey foreign key (user_id) references public.profiles(user_id) on delete cascade;
+alter table public.client_finances add constraint client_finances_user_id_fkey foreign key (user_id) references public.profiles(user_id) on delete cascade;
 
-create policy "Users can update own profile"
-  on public.profiles for update
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all profiles"
-  on public.profiles for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
--- Auto-create profile on signup
+-- ============================================================
+-- AUTH TRIGGER: Auto-create profile + finances + role on signup
+-- ============================================================
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -78,7 +104,7 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ============================================================
--- 2. KYC DOCUMENTS
+-- 4. KYC DOCUMENTS
 -- ============================================================
 create table public.kyc_documents (
   id uuid primary key default gen_random_uuid(),
@@ -96,28 +122,8 @@ create table public.kyc_documents (
 );
 alter table public.kyc_documents enable row level security;
 
-create policy "Users can view own KYC"
-  on public.kyc_documents for select
-  using (auth.uid() = user_id);
-
-create policy "Users can insert own KYC"
-  on public.kyc_documents for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can update own KYC"
-  on public.kyc_documents for update
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all KYC"
-  on public.kyc_documents for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can update any KYC"
-  on public.kyc_documents for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
 -- ============================================================
--- 3. NOTIFICATIONS
+-- 5. NOTIFICATIONS
 -- ============================================================
 create table public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -130,23 +136,8 @@ create table public.notifications (
 );
 alter table public.notifications enable row level security;
 
-create policy "Users can view own notifications"
-  on public.notifications for select
-  using (auth.uid() = user_id);
-
-create policy "Users can mark own notifications read"
-  on public.notifications for update
-  using (auth.uid() = user_id);
-
-create policy "Admins can insert notifications"
-  on public.notifications for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
--- Enable realtime
-alter publication supabase_realtime add table public.notifications;
-
 -- ============================================================
--- 4. MESSAGES (Support Chat)
+-- 6. MESSAGES (Support Chat)
 -- ============================================================
 create table public.messages (
   id uuid primary key default gen_random_uuid(),
@@ -158,92 +149,8 @@ create table public.messages (
 );
 alter table public.messages enable row level security;
 
-create policy "Users can view own messages"
-  on public.messages for select
-  using (auth.uid() = user_id);
-
-create policy "Users can insert own messages"
-  on public.messages for insert
-  with check (auth.uid() = user_id and sender_role = 'user');
-
-create policy "Admins can view all messages"
-  on public.messages for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can insert messages"
-  on public.messages for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-alter publication supabase_realtime add table public.messages;
-
 -- ============================================================
--- 5. USER ROLES
--- ============================================================
-create table public.user_roles (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(user_id) on delete cascade,
-  role text not null check (role in ('user', 'admin', 'super_admin')),
-  created_at timestamptz default now(),
-  unique(user_id)
-);
-alter table public.user_roles enable row level security;
-
-create policy "Users can view own role"
-  on public.user_roles for select
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all roles"
-  on public.user_roles for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Super admins can insert roles"
-  on public.user_roles for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'super_admin'));
-
-create policy "Super admins can update roles"
-  on public.user_roles for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'super_admin'));
-
--- ============================================================
--- 6. CLIENT FINANCES
--- ============================================================
-create table public.client_finances (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(user_id) on delete cascade,
-  capital decimal default 0,
-  profits decimal default 0,
-  total_recovered decimal default 0,
-  currency text default 'USD',
-  notes text,
-  amount_due decimal default 0,
-  payment_due_message text,
-  payment_status text default 'none' check (payment_status in ('none', 'pending', 'paid')),
-  payment_deadline timestamptz,
-  admin_message text,
-  withdrawal_locked boolean default true,
-  withdrawal_lock_message text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique(user_id)
-);
-alter table public.client_finances enable row level security;
-
-create policy "Users can view own finances"
-  on public.client_finances for select
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all finances"
-  on public.client_finances for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can update finances"
-  on public.client_finances for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-alter publication supabase_realtime add table public.client_finances;
-
--- ============================================================
--- 7. DEPOSIT WALLETS (admin-managed)
+-- 7. DEPOSIT WALLETS
 -- ============================================================
 create table public.deposit_wallets (
   id uuid primary key default gen_random_uuid(),
@@ -256,23 +163,6 @@ create table public.deposit_wallets (
   updated_at timestamptz default now()
 );
 alter table public.deposit_wallets enable row level security;
-
-create policy "All authenticated can view wallets"
-  on public.deposit_wallets for select
-  to authenticated
-  using (true);
-
-create policy "Admins can manage wallets"
-  on public.deposit_wallets for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can update wallets"
-  on public.deposit_wallets for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can delete wallets"
-  on public.deposit_wallets for delete
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
 
 -- ============================================================
 -- 8. DEPOSIT REQUESTS
@@ -290,22 +180,6 @@ create table public.deposit_requests (
 );
 alter table public.deposit_requests enable row level security;
 
-create policy "Users can view own deposit requests"
-  on public.deposit_requests for select
-  using (auth.uid() = user_id);
-
-create policy "Users can insert deposit requests"
-  on public.deposit_requests for insert
-  with check (auth.uid() = user_id);
-
-create policy "Admins can view all deposit requests"
-  on public.deposit_requests for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can update deposit requests"
-  on public.deposit_requests for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
 -- ============================================================
 -- 9. WITHDRAWAL REQUESTS
 -- ============================================================
@@ -321,22 +195,6 @@ create table public.withdrawal_requests (
   updated_at timestamptz default now()
 );
 alter table public.withdrawal_requests enable row level security;
-
-create policy "Users can view own withdrawal requests"
-  on public.withdrawal_requests for select
-  using (auth.uid() = user_id);
-
-create policy "Users can insert withdrawal requests"
-  on public.withdrawal_requests for insert
-  with check (auth.uid() = user_id);
-
-create policy "Admins can view all withdrawal requests"
-  on public.withdrawal_requests for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can update withdrawal requests"
-  on public.withdrawal_requests for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
 
 -- ============================================================
 -- 10. TRANSACTION LOG
@@ -354,18 +212,6 @@ create table public.transaction_log (
 );
 alter table public.transaction_log enable row level security;
 
-create policy "Users can view own transactions"
-  on public.transaction_log for select
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all transactions"
-  on public.transaction_log for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can insert transactions"
-  on public.transaction_log for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
 -- ============================================================
 -- 11. REFERRALS
 -- ============================================================
@@ -380,18 +226,6 @@ create table public.referrals (
   used_at timestamptz
 );
 alter table public.referrals enable row level security;
-
-create policy "Users can view own referrals"
-  on public.referrals for select
-  using (auth.uid() = referrer_id);
-
-create policy "Users can insert own referral"
-  on public.referrals for insert
-  with check (auth.uid() = referrer_id);
-
-create policy "Admins can view all referrals"
-  on public.referrals for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
 
 -- ============================================================
 -- 12. MARKET ASSETS
@@ -412,19 +246,6 @@ create table public.market_assets (
 );
 alter table public.market_assets enable row level security;
 
-create policy "All authenticated can view market assets"
-  on public.market_assets for select
-  to authenticated
-  using (true);
-
-create policy "Admins can manage market assets"
-  on public.market_assets for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can update market assets"
-  on public.market_assets for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
 -- ============================================================
 -- 13. MARKET ORDERS
 -- ============================================================
@@ -438,14 +259,6 @@ create table public.market_orders (
   created_at timestamptz default now()
 );
 alter table public.market_orders enable row level security;
-
-create policy "Users can view own orders"
-  on public.market_orders for select
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all orders"
-  on public.market_orders for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
 
 -- ============================================================
 -- 14. MARKET PAYMENT WALLETS
@@ -462,15 +275,6 @@ create table public.market_payment_wallets (
 );
 alter table public.market_payment_wallets enable row level security;
 
-create policy "All authenticated can view payment wallets"
-  on public.market_payment_wallets for select
-  to authenticated
-  using (true);
-
-create policy "Admins can manage payment wallets"
-  on public.market_payment_wallets for all
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
 -- ============================================================
 -- 15. CLIENT MARKET HOLDINGS
 -- ============================================================
@@ -486,14 +290,6 @@ create table public.client_market_holdings (
 );
 alter table public.client_market_holdings enable row level security;
 
-create policy "Users can view own holdings"
-  on public.client_market_holdings for select
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all holdings"
-  on public.client_market_holdings for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
 -- ============================================================
 -- 16. ADMIN AUDIT LOG
 -- ============================================================
@@ -506,14 +302,6 @@ create table public.admin_audit_log (
   created_at timestamptz default now()
 );
 alter table public.admin_audit_log enable row level security;
-
-create policy "Admins can view audit log"
-  on public.admin_audit_log for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
-
-create policy "Admins can insert audit log"
-  on public.admin_audit_log for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
 
 -- ============================================================
 -- 17. CONTACT MESSAGES
@@ -528,17 +316,136 @@ create table public.contact_messages (
 );
 alter table public.contact_messages enable row level security;
 
-create policy "Anyone can submit contact messages"
-  on public.contact_messages for insert
-  to anon
-  with check (true);
+-- ============================================================
+-- RLS POLICIES
+-- ============================================================
 
-create policy "Admins can view contact messages"
-  on public.contact_messages for select
+-- PROFILES
+create policy "Users can view own profile" on public.profiles for select using (auth.uid() = user_id);
+create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = user_id);
+create policy "Users can update own profile" on public.profiles for update using (auth.uid() = user_id);
+create policy "Admins can view all profiles" on public.profiles for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- USER ROLES
+create policy "Users can view own role" on public.user_roles for select using (auth.uid() = user_id);
+create policy "Admins can view all roles" on public.user_roles for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Super admins can insert roles" on public.user_roles for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'super_admin'));
+create policy "Super admins can update roles" on public.user_roles for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'super_admin'));
+
+-- CLIENT FINANCES
+create policy "Users can view own finances" on public.client_finances for select using (auth.uid() = user_id);
+create policy "Admins can view all finances" on public.client_finances for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can update finances" on public.client_finances for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- KYC DOCUMENTS
+create policy "Users can view own KYC" on public.kyc_documents for select using (auth.uid() = user_id);
+create policy "Users can insert own KYC" on public.kyc_documents for insert with check (auth.uid() = user_id);
+create policy "Users can update own KYC" on public.kyc_documents for update using (auth.uid() = user_id);
+create policy "Admins can view all KYC" on public.kyc_documents for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can update any KYC" on public.kyc_documents for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- NOTIFICATIONS
+create policy "Users can view own notifications" on public.notifications for select using (auth.uid() = user_id);
+create policy "Users can mark own notifications read" on public.notifications for update using (auth.uid() = user_id);
+create policy "Admins can insert notifications" on public.notifications for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- MESSAGES
+create policy "Users can view own messages" on public.messages for select using (auth.uid() = user_id);
+create policy "Users can insert own messages" on public.messages for insert with check (auth.uid() = user_id and sender_role = 'user');
+create policy "Admins can view all messages" on public.messages for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can insert messages" on public.messages for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- DEPOSIT WALLETS
+create policy "All authenticated can view wallets" on public.deposit_wallets for select to authenticated using (true);
+create policy "Admins can manage wallets" on public.deposit_wallets for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can update wallets" on public.deposit_wallets for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can delete wallets" on public.deposit_wallets for delete
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- DEPOSIT REQUESTS
+create policy "Users can view own deposits" on public.deposit_requests for select using (auth.uid() = user_id);
+create policy "Users can insert deposits" on public.deposit_requests for insert with check (auth.uid() = user_id);
+create policy "Admins can view all deposits" on public.deposit_requests for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can update deposits" on public.deposit_requests for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- WITHDRAWAL REQUESTS
+create policy "Users can view own withdrawals" on public.withdrawal_requests for select using (auth.uid() = user_id);
+create policy "Users can insert withdrawals" on public.withdrawal_requests for insert with check (auth.uid() = user_id);
+create policy "Admins can view all withdrawals" on public.withdrawal_requests for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can update withdrawals" on public.withdrawal_requests for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- TRANSACTION LOG
+create policy "Users can view own transactions" on public.transaction_log for select using (auth.uid() = user_id);
+create policy "Admins can view all transactions" on public.transaction_log for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can insert transactions" on public.transaction_log for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- REFERRALS
+create policy "Users can view own referrals" on public.referrals for select using (auth.uid() = referrer_id);
+create policy "Users can insert own referral" on public.referrals for insert with check (auth.uid() = referrer_id);
+create policy "Admins can view all referrals" on public.referrals for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- MARKET ASSETS
+create policy "All authenticated can view market assets" on public.market_assets for select to authenticated using (true);
+create policy "Admins can manage market assets" on public.market_assets for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can update market assets" on public.market_assets for update
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- MARKET ORDERS
+create policy "Users can view own orders" on public.market_orders for select using (auth.uid() = user_id);
+create policy "Admins can view all orders" on public.market_orders for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- MARKET PAYMENT WALLETS
+create policy "All authenticated can view payment wallets" on public.market_payment_wallets for select to authenticated using (true);
+create policy "Admins can manage payment wallets" on public.market_payment_wallets for all
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- CLIENT MARKET HOLDINGS
+create policy "Users can view own holdings" on public.client_market_holdings for select using (auth.uid() = user_id);
+create policy "Admins can view all holdings" on public.client_market_holdings for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- ADMIN AUDIT LOG
+create policy "Admins can view audit log" on public.admin_audit_log for select
+  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+create policy "Admins can insert audit log" on public.admin_audit_log for insert
+  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+
+-- CONTACT MESSAGES
+create policy "Anyone can submit contact" on public.contact_messages for insert to anon with check (true);
+create policy "Admins can view contact messages" on public.contact_messages for select
   using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
 
 -- ============================================================
--- 18. EXECUTE_MARKET_ORDER RPC
+-- REALTIME SUBSCRIPTIONS
+-- ============================================================
+alter publication supabase_realtime add table public.notifications;
+alter publication supabase_realtime add table public.messages;
+alter publication supabase_realtime add table public.client_finances;
+
+-- ============================================================
+-- EXECUTE_MARKET_ORDER RPC
 -- ============================================================
 create or replace function public.execute_market_order(
   _asset_id uuid,
@@ -548,13 +455,14 @@ create or replace function public.execute_market_order(
   _target_asset_id uuid default null,
   _wallet_address text default null,
   _tx_hash text default null
-) returns jsonb as $$
+) returns jsonb
+language plpgsql security definer
+as $$
 declare
   _user_id uuid;
   _current_balance decimal;
   _asset_price decimal;
   _asset_symbol text;
-  _holding_record record;
 begin
   _user_id := auth.uid();
   if _user_id is null then
@@ -595,13 +503,14 @@ begin
 
   return jsonb_build_object('success', true, 'symbol', _asset_symbol);
 end;
-$$ language plpgsql security definer;
+$$;
 
 -- ============================================================
--- 19. STORAGE: kyc-documents bucket
+-- STORAGE: kyc-documents bucket
 -- ============================================================
 insert into storage.buckets (id, name, public)
-values ('kyc-documents', 'kyc-documents', false);
+values ('kyc-documents', 'kyc-documents', false)
+on conflict (id) do nothing;
 
 create policy "Users can upload own KYC files"
   on storage.objects for insert
@@ -627,9 +536,8 @@ create policy "Admins can view all KYC files"
   );
 
 -- ============================================================
--- 20. SEED: Add your admin user
+-- AFTER SETUP: Make yourself admin
+-- Run this after creating your account at /auth
 -- ============================================================
--- After creating your account in the app, run:
--- insert into public.user_roles (user_id, role)
--- values ('YOUR-USER-UUID-HERE', 'super_admin');
--- on conflict (user_id) do update set role = 'super_admin';
+-- UPDATE public.user_roles SET role = 'super_admin'
+-- WHERE user_id = (SELECT id FROM auth.users WHERE email = 'your@email.com');

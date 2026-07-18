@@ -1,15 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAdmin } from "../contexts/AdminContext";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
+import { Label } from "../components/ui/Label";
 import { Textarea } from "../components/ui/Textarea";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "../components/ui/Dialog";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "../components/ui/Table";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/useToast";
-import { Eye, CircleCheckBig, CircleX, LoaderCircle } from "lucide-react";
+import { Eye, CircleCheckBig, CircleX, LoaderCircle, ImageOff } from "lucide-react";
+
+function KycImage({ path, alt, className = "w-full rounded-lg border" }) {
+  const [url, setUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (path) {
+        setLoading(true); setError(false);
+        try {
+          const { data, error: err } = await supabase.storage.from("kyc-documents").createSignedUrl(path, 3600);
+          if (err) { setError(true); setUrl(null); }
+          else { setUrl(data?.signedUrl || null); }
+        } catch { setError(true); setUrl(null); }
+        setLoading(false);
+      } else { setUrl(null); }
+    })();
+  }, [path]);
+
+  if (!path) return <div className="h-48 bg-muted rounded-lg flex items-center justify-center"><span className="text-muted-foreground">-</span></div>;
+  if (loading) return <div className="h-48 w-full rounded-lg bg-muted animate-pulse" />;
+  if (error || !url) return (
+    <div className="h-48 bg-muted rounded-lg flex flex-col items-center justify-center gap-2">
+      <ImageOff className="h-8 w-8 text-muted-foreground" />
+      <span className="text-sm text-muted-foreground">Failed to load image</span>
+    </div>
+  );
+  return <img src={url} alt={alt} className={className} onError={() => setError(true)} />;
+}
 
 export function AdminKyc() {
   const { t, language } = useLanguage();
@@ -80,27 +111,19 @@ export function AdminKyc() {
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <p className="text-sm font-medium mb-2">{isAr ? "جواز السفر" : "Passport"}</p>
-                                {doc.passport_url ? (
-                                  <img src={`${supabase.storage.from("kyc-documents").getPublicUrl(doc.passport_url).data.publicUrl}`} alt="Passport" className="w-full rounded-lg border" />
-                                ) : <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">-</div>}
+                                <KycImage path={doc.passport_url} alt="Passport" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium mb-2">{isAr ? "صورة شخصية" : "Selfie"}</p>
-                                {doc.selfie_url ? (
-                                  <img src={`${supabase.storage.from("kyc-documents").getPublicUrl(doc.selfie_url).data.publicUrl}`} alt="Selfie" className="w-full rounded-lg border" />
-                                ) : <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">-</div>}
+                                <KycImage path={doc.selfie_url} alt="Selfie" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium mb-2">{isAr ? "الهوية الأمامية" : "ID Front"}</p>
-                                {doc.id_front_url ? (
-                                  <img src={`${supabase.storage.from("kyc-documents").getPublicUrl(doc.id_front_url).data.publicUrl}`} alt="ID Front" className="w-full rounded-lg border" />
-                                ) : <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">-</div>}
+                                <KycImage path={doc.id_front_url} alt="ID Front" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium mb-2">{isAr ? "الهوية الخلفية" : "ID Back"}</p>
-                                {doc.id_back_url ? (
-                                  <img src={`${supabase.storage.from("kyc-documents").getPublicUrl(doc.id_back_url).data.publicUrl}`} alt="ID Back" className="w-full rounded-lg border" />
-                                ) : <div className="h-48 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">-</div>}
+                                <KycImage path={doc.id_back_url} alt="ID Back" />
                               </div>
                             </div>
                             <div>

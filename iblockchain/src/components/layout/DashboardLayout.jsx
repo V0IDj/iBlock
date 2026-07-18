@@ -119,7 +119,7 @@ function NotificationsDropdown({ notifications, unreadCount, onMarkAsRead, onMar
               const Icon = getIcon(n.title);
               return (
                 <div key={n.id} className={`p-3 cursor-pointer focus:bg-accent/50 ${n.is_read ? "" : "bg-primary/5"}`}
-                  onClick={() => { onMarkAsRead(n.id); navigate(`/dashboard/notification/${n.id}`); }}>
+                  onClick={() => { onMarkAsRead(n.id); navigate(`/notification/${n.id}`); }}>
                   <div className="flex items-start gap-3 w-full">
                     <div className="mt-0.5">
                       {n.title?.includes("رسالة") || n.title?.includes("message") ? <MessageSquare className="h-4 w-4 text-primary" /> :

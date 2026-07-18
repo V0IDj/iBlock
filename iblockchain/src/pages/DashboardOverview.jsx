@@ -222,7 +222,7 @@ export function DashboardOverview() {
                 {notifs.slice(0, 5).map((n) => (
                   <div
                     key={n.id}
-                    onClick={() => navigate(`/dashboard/notification/${n.id}`)}
+                    onClick={() => navigate(`/notification/${n.id}`)}
                     className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-muted/50 ${n.is_read ? "" : "bg-primary/[0.03]"}`}
                   >
                     <div className="mt-1">

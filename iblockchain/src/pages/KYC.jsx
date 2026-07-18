@@ -13,7 +13,7 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024;
 
 export function KYC() {
-  const { t, isRTL, language } = useLanguage();
+  const { t, language, isRTL } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState(null);
@@ -143,12 +143,10 @@ export function KYC() {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-4">{language === "ar" ? "التحقق من الهوية" : "Identity Verification"}</h1>
-            <p className="text-muted-foreground">{language === "ar" ? "يرجى تحميل المستندات المطلوبة" : "Please upload the required documents"}</p>
+            <h1 className="text-3xl font-bold mb-4">{t("kyc.title")}</h1>
+            <p className="text-muted-foreground">{t("kyc.subtitle")}</p>
             <div className="mt-4 p-4 bg-primary/10 rounded-lg">
-              <p className="text-sm text-primary font-medium">
-                {language === "ar" ? "يمكنك رفع جواز السفر أو الهوية (الوجهين) - أحدهما كافٍ" : "You can upload passport OR ID (front + back) - either is sufficient"}
-              </p>
+              <p className="text-sm text-primary font-medium">{t("kyc.optionalNote")}</p>
             </div>
           </div>
 
@@ -162,7 +160,7 @@ export function KYC() {
                     {language === "ar" ? "جواز السفر" : "Passport"}
                   </CardTitle>
                   {hasPassport && <CircleCheckBig className="h-5 w-5 text-green-500" />}
-                  {!hasPassport && !hasId && <span className="text-xs bg-muted px-2 py-1 rounded">Optional</span>}
+                  {!hasPassport && !hasId && <span className="text-xs bg-muted px-2 py-1 rounded">{t("kyc.optional")}</span>}
                 </div>
                 <CardDescription>{language === "ar" ? "صورة واضحة لجواز السفر" : "Clear image of your passport"}</CardDescription>
               </CardHeader>
@@ -201,7 +199,7 @@ export function KYC() {
                     {language === "ar" ? "الهوية الأمامية" : "ID Front"}
                   </CardTitle>
                   {idFront && <CircleCheckBig className="h-5 w-5 text-green-500" />}
-                  {!hasPassport && !hasId && <span className="text-xs bg-muted px-2 py-1 rounded">Optional</span>}
+                  {!hasPassport && !hasId && <span className="text-xs bg-muted px-2 py-1 rounded">{t("kyc.optional")}</span>}
                 </div>
                 <CardDescription>{language === "ar" ? "الوجه الأمامي للهوية" : "Front side of your ID"}</CardDescription>
               </CardHeader>
@@ -234,7 +232,7 @@ export function KYC() {
                     {language === "ar" ? "الهوية الخلفية" : "ID Back"}
                   </CardTitle>
                   {idBack && <CircleCheckBig className="h-5 w-5 text-green-500" />}
-                  {!hasPassport && !hasId && <span className="text-xs bg-muted px-2 py-1 rounded">Optional</span>}
+                  {!hasPassport && !hasId && <span className="text-xs bg-muted px-2 py-1 rounded">{t("kyc.optional")}</span>}
                 </div>
                 <CardDescription>{language === "ar" ? "الوجه الخلفي للهوية" : "Back side of your ID"}</CardDescription>
               </CardHeader>
@@ -269,7 +267,7 @@ export function KYC() {
                   {selfie ? (
                     <CircleCheckBig className="h-5 w-5 text-green-500" />
                   ) : (
-                    <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">Required</span>
+                    <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded">{t("kyc.required")}</span>
                   )}
                 </div>
                 <CardDescription>{language === "ar" ? "صورة واضحة لوجهك" : "A clear photo of your face"}</CardDescription>
@@ -324,3 +322,5 @@ export function KYC() {
     </div>
   );
 }
+
+
