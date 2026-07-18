@@ -3,6 +3,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/Select";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/useToast";
 import { ArrowDownUp, Info, TrendingUp, TrendingDown, RefreshCw, LoaderCircle } from "lucide-react";
@@ -55,9 +56,12 @@ export function DashboardSwap() {
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">{isAr ? "من" : "From"}</label>
                 <div className="flex gap-3">
-                  <select value={fromCrypto} onChange={e => setFromCrypto(e.target.value)} className="w-[160px] h-10 rounded-xl border border-input bg-background px-3 text-sm">
-                    {cryptos.map(c => <option key={c.symbol} value={c.symbol} disabled={c.symbol === toCrypto}>{c.symbol} - {c.name}</option>)}
-                  </select>
+                  <Select value={fromCrypto} onValueChange={setFromCrypto}>
+                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {cryptos.map(c => <SelectItem key={c.symbol} value={c.symbol} disabled={c.symbol === toCrypto}>{c.symbol} - {c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <Input type="number" placeholder="0.00" value={fromAmount} onChange={e => setFromAmount(e.target.value)} className="flex-1 text-lg" />
                 </div>
                 <p className="text-xs text-muted-foreground">≈ ${fromAmount ? (Number(fromAmount) * prices[fromCrypto]).toLocaleString() : "0.00"} USD</p>
@@ -70,9 +74,12 @@ export function DashboardSwap() {
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">{isAr ? "إلى" : "To"}</label>
                 <div className="flex gap-3">
-                  <select value={toCrypto} onChange={e => setToCrypto(e.target.value)} className="w-[160px] h-10 rounded-xl border border-input bg-background px-3 text-sm">
-                    {cryptos.map(c => <option key={c.symbol} value={c.symbol} disabled={c.symbol === fromCrypto}>{c.symbol} - {c.name}</option>)}
-                  </select>
+                  <Select value={toCrypto} onValueChange={setToCrypto}>
+                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {cryptos.map(c => <SelectItem key={c.symbol} value={c.symbol} disabled={c.symbol === fromCrypto}>{c.symbol} - {c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <Input type="number" placeholder="0.00" value={toAmount} readOnly className="flex-1 text-lg bg-background/30" />
                 </div>
                 <p className="text-xs text-muted-foreground">≈ ${toAmount ? (Number(toAmount) * prices[toCrypto]).toLocaleString() : "0.00"} USD</p>

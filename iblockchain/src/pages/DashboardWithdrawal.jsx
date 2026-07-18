@@ -7,6 +7,7 @@ import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/useToast";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/Select";
 import { ArrowUpFromLine, CircleX, Clock, CheckCircle2, LoaderCircle } from "lucide-react";
 
 const NETWORKS = ["ERC20", "TRC20", "BEP20", "SOL"];
@@ -92,9 +93,12 @@ export function DashboardWithdrawal() {
           </div>
           <div>
             <Label>{isAr ? "الشبكة" : "Network"}</Label>
-            <select value={network} onChange={e => setNetwork(e.target.value)} className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm mt-1">
-              {NETWORKS.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
+            <Select value={network} onValueChange={setNetwork}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {NETWORKS.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <Button onClick={async () => {
             if (!amount || !address) return; setSending(true);
