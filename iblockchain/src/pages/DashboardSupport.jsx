@@ -98,10 +98,17 @@ export function DashboardSupport() {
                       <p className={`text-[10px] mt-1 ${
                         msg.sender_role === "user" ? "text-primary-foreground/60" : "text-muted-foreground"
                       }`}>
-                        {new Date(msg.created_at).toLocaleTimeString(isAr ? "ar" : "en", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {(() => {
+                          const diff = Date.now() - new Date(msg.created_at).getTime();
+                          const mins = Math.floor(diff / 60000);
+                          const hours = Math.floor(diff / 3600000);
+                          const days = Math.floor(diff / 86400000);
+                          if (mins < 1) return isAr ? "الآن" : "just now";
+                          if (mins < 60) return isAr ? `منذ ${mins} دقيقة` : `${mins}m ago`;
+                          if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours}h ago`;
+                          if (days < 7) return isAr ? `منذ ${days} يوم` : `${days}d ago`;
+                          return new Date(msg.created_at).toLocaleDateString(isAr ? "ar" : "en", { month: "short", day: "numeric" });
+                        })()}
                       </p>
                     </div>
                   </div>
