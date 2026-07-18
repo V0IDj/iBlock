@@ -44,6 +44,7 @@ create table public.profiles (
   address text,
   country text,
   wallet_id text unique,
+  unique(user_id),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
