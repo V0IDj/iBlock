@@ -5,16 +5,16 @@ const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const supabase = createClient(supabaseUrl, serviceKey);
 
 const users = [
-  { email: "super@iblockchain.com", password: "Test@123456", fullName: "Super Admin", role: "super_admin" },
-  { email: "admin1@iblockchain.com", password: "Test@123456", fullName: "Admin One", role: "admin" },
-  { email: "admin2@iblockchain.com", password: "Test@123456", fullName: "Admin Two", role: "admin" },
-  { email: "user.full@iblockchain.com", password: "Test@123456", fullName: "User Full Access", role: "user" },
-  { email: "user.kyc@iblockchain.com", password: "Test@123456", fullName: "User KYC Pending", role: "user" },
-  { email: "user.locked@iblockchain.com", password: "Test@123456", fullName: "User Withdrawal Locked", role: "user" },
-  { email: "user.premium@iblockchain.com", password: "Test@123456", fullName: "User Premium", role: "user" },
-  { email: "user.basic@iblockchain.com", password: "Test@123456", fullName: "User Basic", role: "user" },
-  { email: "user.new@iblockchain.com", password: "Test@123456", fullName: "User New", role: "user" },
-  { email: "user.vip@iblockchain.com", password: "Test@123456", fullName: "User VIP", role: "user" },
+  { email: "super@iblockone.com", password: "Test@123456", fullName: "Super Admin", role: "super_admin" },
+  { email: "admin1@iblockone.com", password: "Test@123456", fullName: "Admin One", role: "admin" },
+  { email: "admin2@iblockone.com", password: "Test@123456", fullName: "Admin Two", role: "admin" },
+  { email: "user.full@iblockone.com", password: "Test@123456", fullName: "User Full Access", role: "user" },
+  { email: "user.kyc@iblockone.com", password: "Test@123456", fullName: "User KYC Pending", role: "user" },
+  { email: "user.locked@iblockone.com", password: "Test@123456", fullName: "User Withdrawal Locked", role: "user" },
+  { email: "user.premium@iblockone.com", password: "Test@123456", fullName: "User Premium", role: "user" },
+  { email: "user.basic@iblockone.com", password: "Test@123456", fullName: "User Basic", role: "user" },
+  { email: "user.new@iblockone.com", password: "Test@123456", fullName: "User New", role: "user" },
+  { email: "user.vip@iblockone.com", password: "Test@123456", fullName: "User VIP", role: "user" },
 ];
 
 async function seed() {

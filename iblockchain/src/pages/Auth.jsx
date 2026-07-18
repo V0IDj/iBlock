@@ -83,12 +83,17 @@ export function Auth() {
     setLoading(true);
     try {
       const code = Math.floor(1e5 + 9e5 * Math.random()).toString();
-      const { error } = await supabase.functions.invoke("send-verification-code", {
+      const { data: fnData, error } = await supabase.functions.invoke("send-verification-code", {
         body: { email: signupForm.email, code, password: signupForm.password, fullName: signupForm.fullName, phone: signupForm.phone, language },
       });
       if (error) throw error;
       sessionStorage.setItem("pendingVerificationEmail", signupForm.email);
-      toast({ title: isAr ? "تم إرسال الرمز" : "Code sent", description: isAr ? "تحقق من بريدك الإلكتروني للحصول على رمز التحقق." : "Check your email for the verification code." });
+      sessionStorage.setItem("pendingVerificationCode", code);
+      if (fnData?.code) {
+        toast({ title: isAr ? "رمز التحقق" : "Verification Code", description: `${isAr ? "رمزك هو" : "Your code is"}: ${fnData.code}` });
+      } else {
+        toast({ title: isAr ? "تم إرسال الرمز" : "Code sent", description: isAr ? "تحقق من بريدك الإلكتروني" : "Check your email" });
+      }
       navigate("/verify-email?email=" + encodeURIComponent(signupForm.email));
     } catch (err) {
       toast({ title: isAr ? "خطأ" : "Error", description: err.message || (isAr ? "فشل إرسال رمز التحقق" : "Failed to send verification code"), variant: "destructive" });

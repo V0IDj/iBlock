@@ -41,7 +41,7 @@ serve(async (req) => {
       { onConflict: "email" }
     );
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, code: RESEND_API_KEY ? null : code }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

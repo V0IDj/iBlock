@@ -33,7 +33,7 @@ export function DashboardReferral() {
   const completed = referrals.filter(r => r.status === "completed").length;
   const rewards = referrals.reduce((s, r) => s + Number(r.reward_amount || 0), 0);
 
-  const copyLink = async (t) => { await navigator.clipboard.writeText(t); setCopied(true); toast({ title: "Copied!" }); setTimeout(() => setCopied(false), 2000); };
+  const copyLink = async (t) => { await navigator.clipboard.writeText(t); setCopied(true); toast({ title: language === "ar" ? "تم النسخ!" : "Copied!" }); setTimeout(() => setCopied(false), 2000); };
 
   if (loading) return <div className="flex justify-center h-64 items-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
@@ -41,9 +41,9 @@ export function DashboardReferral() {
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       <div><h1 className="text-2xl font-bold">{language === "ar" ? "الإحالة" : "Referral Program"}</h1><p className="text-muted-foreground mt-1">{language === "ar" ? "ادعُ أصدقاءك واكسب" : "Invite friends and earn"}</p></div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[{ label: "Referrals", value: referrals.length, icon: Users, color: "text-primary" },
-          { label: "Completed", value: completed, icon: CheckCircle2, color: "text-emerald-400" },
-          { label: "Rewards", value: `$${rewards}`, icon: Gift, color: "text-amber-400" },
+        {[{ label: language === "ar" ? "المُحالون" : "Referrals", value: referrals.length, icon: Users, color: "text-primary" },
+          { label: language === "ar" ? "مكتمل" : "Completed", value: completed, icon: CheckCircle2, color: "text-emerald-400" },
+          { label: language === "ar" ? "المكافآت" : "Rewards", value: `$${rewards}`, icon: Gift, color: "text-amber-400" },
         ].map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * i }}>
             <Card><CardContent className="p-4 flex items-center gap-3">
@@ -66,9 +66,9 @@ export function DashboardReferral() {
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5 text-primary" />How It Works</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[{ step: "1", title: "Share Link", desc: "Send your referral link to friends" },
-              { step: "2", title: "They Sign Up", desc: "Your friend signs up via your link" },
-              { step: "3", title: "Earn Reward", desc: "Get rewarded when they complete KYC" },
+            {[{ step: "1", title: language === "ar" ? "شارك الرابط" : "Share Link", desc: language === "ar" ? "أرسل رابط الإحالة لأصدقائك" : "Send your referral link to friends" },
+              { step: "2", title: language === "ar" ? "يسجلون" : "They Sign Up", desc: language === "ar" ? "صديقك يسجل عبر رابطك" : "Your friend signs up via your link" },
+              { step: "3", title: language === "ar" ? "اكسب المكافأة" : "Earn Reward", desc: language === "ar" ? "احصل على مكافأة عند إكمالهم التحقق" : "Get rewarded when they complete KYC" },
             ].map((s, i) => (
               <div key={i} className="text-center p-4 rounded-lg bg-muted/10">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3"><span className="text-primary font-bold">{s.step}</span></div>
@@ -78,11 +78,11 @@ export function DashboardReferral() {
           </div>
         </CardContent>
       </Card>
-      {referrals.length > 0 && <Card><CardHeader><CardTitle>Referral History</CardTitle></CardHeader>
+      {referrals.length > 0 && <Card><CardHeader><CardTitle>{language === "ar" ? "سجل الإحالة" : "Referral History"}</CardTitle></CardHeader>
         <CardContent><div className="space-y-2">{referrals.map((r, i) => (
           <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/10">
-            <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" /><span className="text-sm">Referred User</span></div>
-            <div className="flex items-center gap-3"><Badge variant={r.status === "completed" ? "default" : "secondary"}>{r.status === "completed" ? "Completed" : "Pending"}</Badge><span className="text-sm font-medium text-primary">${r.reward_amount || 0}</span></div>
+            <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{language === "ar" ? "المستخدم المُحال" : "Referred User"}</span></div>
+            <div className="flex items-center gap-3"><Badge variant={r.status === "completed" ? "default" : "secondary"}>{r.status === "completed" ? (language === "ar" ? "مكتمل" : "Completed") : (language === "ar" ? "قيد الانتظار" : "Pending")}</Badge><span className="text-sm font-medium text-primary">${r.reward_amount || 0}</span></div>
           </div>
         ))}</div></CardContent></Card>}
     </div>

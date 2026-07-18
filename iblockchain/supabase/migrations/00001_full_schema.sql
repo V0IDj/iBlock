@@ -549,6 +549,22 @@ create policy "Admins can view all KYC files"
   );
 
 -- ============================================================
+-- STORAGE: deposit-receipts bucket
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('deposit-receipts', 'deposit-receipts', false)
+on conflict (id) do nothing;
+
+create policy "Users can upload own receipts" on storage.objects for insert
+  with check (bucket_id = 'deposit-receipts' and auth.role() = 'authenticated' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Users can view own receipts" on storage.objects for select
+  using (bucket_id = 'deposit-receipts' and auth.role() = 'authenticated' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Admins can view all receipts" on storage.objects for select
+  using (bucket_id = 'deposit-receipts' and public.is_admin());
+
+-- ============================================================
 -- AFTER SETUP: Make yourself admin
 -- Run this after creating your account at /auth
 -- ============================================================

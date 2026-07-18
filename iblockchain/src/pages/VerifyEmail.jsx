@@ -13,6 +13,7 @@ export function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const email = searchParams.get("email") || sessionStorage.getItem("pendingVerificationEmail") || "";
+  const devCode = sessionStorage.getItem("pendingVerificationCode") || "";
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -64,6 +65,7 @@ export function VerifyEmail() {
           <CardTitle className="text-2xl">{language === "ar" ? "تأكيد البريد الإلكتروني" : "Verify Email"}</CardTitle>
           <CardDescription>{language === "ar" ? "أدخل رمز التحقق المرسل إلى بريدك" : "Enter the verification code sent to your email"}</CardDescription>
           {email && <p className="text-sm text-primary mt-2 font-medium">{email}</p>}
+          {devCode && <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2 mt-2 font-mono">Dev code: {devCode}</p>}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex justify-center">
