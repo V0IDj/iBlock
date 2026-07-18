@@ -11,7 +11,8 @@ import { useToast } from "../hooks/useToast";
 import { Shield, ArrowLeft, Mail, LoaderCircle } from "lucide-react";
 
 export function ForgotPassword() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+  const isAr = language === "ar";
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -22,14 +23,18 @@ export function ForgotPassword() {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setSent(true);
-      toast({ title: "Sent!", description: "Check your email for the reset link." });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
+      } else {
+        setSent(true);
+        toast({ title: isAr ? "تم الإرسال!" : "Sent!", description: isAr ? "تحقق من بريدك الإلكتروني للحصول على رابط إعادة التعيين." : "Check your email for the reset link." });
+      }
+    } catch (err) {
+      toast({ title: isAr ? "خطأ" : "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };

@@ -5,7 +5,7 @@ import { Users, ShieldCheck, TrendingUp, Clock } from "lucide-react";
 const stats = [
   { value: "+5000", key: "clients", icon: Users },
   { value: "$50M+", key: "recovered", icon: ShieldCheck },
-  { value: "95%", key: "successRate", icon: TrendingUp },
+  { value: "95%", key: "success", icon: TrendingUp },
   { value: "24/7", key: "support", icon: Clock },
 ];
 

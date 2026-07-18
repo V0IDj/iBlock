@@ -29,6 +29,7 @@ const signupSchema = z.object({
 
 export function Auth() {
   const { t, isRTL, dir, language } = useLanguage();
+  const isAr = language === "ar";
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -53,14 +54,18 @@ export function Auth() {
       if (err instanceof z.ZodError) { const e = {}; err.errors.forEach(i => { if (i.path[0]) e[i.path[0]] = i.message; }); setErrors(e); return; }
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: loginForm.email,
-      password: loginForm.password,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/dashboard");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginForm.email,
+        password: loginForm.password,
+      });
+      if (error) {
+        toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      toast({ title: isAr ? "خطأ" : "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };
@@ -72,7 +77,7 @@ export function Auth() {
       if (err instanceof z.ZodError) { const e = {}; err.errors.forEach(i => { if (i.path[0]) e[i.path[0]] = i.message; }); setErrors(e); return; }
     }
     if (signupForm.password !== signupForm.confirmPassword) {
-      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "كلمات المرور غير متطابقة" : "Passwords do not match", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -83,10 +88,10 @@ export function Auth() {
       });
       if (error) throw error;
       sessionStorage.setItem("pendingVerificationEmail", signupForm.email);
-      toast({ title: "Code sent", description: "Check your email for the verification code." });
+      toast({ title: isAr ? "تم إرسال الرمز" : "Code sent", description: isAr ? "تحقق من بريدك الإلكتروني للحصول على رمز التحقق." : "Check your email for the verification code." });
       navigate("/verify-email?email=" + encodeURIComponent(signupForm.email));
     } catch (err) {
-      toast({ title: "Error", description: err.message || "Failed to send verification code", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: err.message || (isAr ? "فشل إرسال رمز التحقق" : "Failed to send verification code"), variant: "destructive" });
     }
     setLoading(false);
   };

@@ -10,7 +10,8 @@ import { useToast } from "../hooks/useToast";
 import { Shield, CheckCircle2, Lock, LoaderCircle } from "lucide-react";
 
 export function ResetPassword() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+  const isAr = language === "ar";
   const navigate = useNavigate();
   const { toast } = useToast();
   const [password, setPassword] = useState("");
@@ -38,21 +39,25 @@ export function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل" : "Password must be at least 6 characters", variant: "destructive" });
       return;
     }
     if (password !== confirmPassword) {
-      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "كلمات المرور غير متطابقة" : "Passwords do not match", variant: "destructive" });
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setSuccess(true);
-      toast({ title: "Success", description: "Password updated successfully" });
-      setTimeout(() => navigate("/dashboard"), 2000);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
+      } else {
+        setSuccess(true);
+        toast({ title: isAr ? "تم بنجاح" : "Success", description: isAr ? "تم تحديث كلمة المرور بنجاح" : "Password updated successfully" });
+        setTimeout(() => navigate("/dashboard"), 2000);
+      }
+    } catch (err) {
+      toast({ title: isAr ? "خطأ" : "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };

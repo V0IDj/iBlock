@@ -58,7 +58,7 @@ export function KYCPending() {
             <Shield className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold text-primary">iBlockchain</span>
           </div>
-          <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); toast({ title: "Logged out", description: "See you again" }); navigate("/"); }}>
+          <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); toast({ title: isAr ? "تسجيل خروج" : "Logged out", description: isAr ? "نراك قريباً" : "See you again" }); navigate("/"); }}>
             <LogOut className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
             {t("dashboard.logout")}
           </Button>

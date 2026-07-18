@@ -39,10 +39,10 @@ export function VerifyEmail() {
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Verification failed");
       sessionStorage.removeItem("pendingVerificationEmail");
-      toast({ title: "Verified!", description: "Your email has been verified." });
+      toast({ title: language === "ar" ? "تم التحقق!" : "Verified!", description: language === "ar" ? "تم تأكيد بريدك الإلكتروني." : "Your email has been verified." });
       navigate("/auth?mode=login");
     } catch (err) {
-      toast({ title: "Invalid code", description: err.message || "Please try again", variant: "destructive" });
+      toast({ title: language === "ar" ? "رمز غير صالح" : "Invalid code", description: err.message || (language === "ar" ? "يرجى المحاولة مرة أخرى" : "Please try again"), variant: "destructive" });
     }
     setLoading(false);
   };
@@ -101,9 +101,9 @@ export function VerifyEmail() {
                 if (!email || resending) return;
                 setResending(true);
                 try {
-                  toast({ title: "Info", description: "Please sign up again to receive a new code." });
+                  toast({ title: language === "ar" ? "معلومات" : "Info", description: language === "ar" ? "يرجى التسجيل مرة أخرى للحصول على رمز جديد." : "Please sign up again to receive a new code." });
                   navigate("/auth?mode=signup");
-                } catch (e) { toast({ title: "Error", variant: "destructive" }); }
+                } catch (e) { toast({ title: language === "ar" ? "خطأ" : "Error", variant: "destructive" }); }
                 setResending(false);
                 setTimer(60);
                 setCanResend(false);
