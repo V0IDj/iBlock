@@ -186,6 +186,15 @@ export const translations = {
       kycDesc: "You must complete identity verification",
       startVerification: "Start Verification",
     },
+    wallet: {
+      globalWallet: "Global Wallet",
+      totalBalance: "Total Balance",
+      walletId: "Wallet ID",
+      accountHolder: "Account Holder",
+      email: "Email",
+      country: "Country",
+      notSet: "Not set",
+    },
     admin: {
       title: "Admin Panel",
       overview: "Overview",
@@ -407,6 +416,15 @@ export const translations = {
       kycRequired: "التحقق من الهوية مطلوب",
       kycDesc: "يجب عليك إكمال عملية التحقق من الهوية",
       startVerification: "بدء عملية التحقق",
+    },
+    wallet: {
+      globalWallet: "المحفظة الرئيسية",
+      totalBalance: "الرصيد الإجمالي",
+      walletId: "رقم المحفظة",
+      accountHolder: "اسم الحساب",
+      email: "البريد الإلكتروني",
+      country: "الدولة",
+      notSet: "غير محدد",
     },
     admin: {
       title: "لوحة الإدارة",

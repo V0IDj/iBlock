@@ -4,6 +4,7 @@ import { Card, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
+import { SecurityWarningBanner } from "../components/dashboard/SecurityWarningBanner";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/useToast";
 import { Copy, Check, Upload, Image, LoaderCircle, ArrowDownToLine } from "lucide-react";
@@ -47,6 +48,8 @@ export function DashboardDeposit() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <SecurityWarningBanner />
+
       <div>
         <h1 className="text-2xl font-bold">{isAr ? "إيداع" : "Deposit"}</h1>
         <p className="text-muted-foreground mt-1">{isAr ? "اختر العملة وأرسل إثبات التحويل" : "Select currency and submit transfer proof"}</p>

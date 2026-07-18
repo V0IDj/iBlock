@@ -1,202 +1,289 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useDashboard } from "../contexts/DashboardContext";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
-import { Link } from "react-router-dom";
-import {
-  Shield, TrendingUp, TrendingDown, DollarSign, Wallet, Bell,
-  Clock, ArrowRight, AlertTriangle, Copy,
-} from "lucide-react";
-import { useToast } from "../hooks/useToast";
+import { WalletCard } from "../components/dashboard/WalletCard";
+import { SecurityWarningBanner } from "../components/dashboard/SecurityWarningBanner";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { Shield, TrendingUp, TrendingDown, DollarSign, Wallet, Bell, MessageSquare, X, AlertTriangle, Calendar, TriangleAlert } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+
+function PaymentDueBanner({ amountDue, currency, paymentMessage, paymentDeadline }) {
+  const { language } = useLanguage();
+  const [dismissed, setDismissed] = useState(false);
+  const isAr = language === "ar";
+
+  if (amountDue <= 0 || dismissed) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="border-destructive/50 bg-destructive/10 mb-2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-destructive/5 via-destructive/10 to-destructive/5 animate-pulse" />
+        <CardContent className="relative py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-full bg-destructive/20">
+                <TriangleAlert className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-destructive mb-1">
+                  {isAr ? "⚠️ رسوم مستحقة الدفع" : "⚠️ Payment Required"}
+                </h3>
+                {paymentMessage && <p className="text-sm text-foreground mb-2">{paymentMessage}</p>}
+                <div className="flex flex-wrap items-center gap-4 mt-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="h-4 w-4 text-destructive" />
+                    <span className="font-bold text-lg text-destructive">{currency} {amountDue.toLocaleString()}</span>
+                  </div>
+                  {paymentDeadline && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>{isAr ? "الموعد النهائي: " : "Deadline: "}{new Date(paymentDeadline).toLocaleDateString(isAr ? "ar" : "en", { year: "numeric", month: "short", day: "numeric" })}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setDismissed(true)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 export function DashboardOverview() {
-  const { t, isRTL, language } = useLanguage();
-  const { profile, finances, notifications } = useDashboard();
-  const { toast } = useToast();
+  const { language } = useLanguage();
+  const { user, profile, kyc, finances, notifications: notifs } = useDashboard();
+  const navigate = useNavigate();
+  const isAr = language === "ar";
 
-  const copyWalletId = () => {
-    if (profile?.wallet_id) {
-      navigator.clipboard.writeText(profile.wallet_id);
-      toast({ title: "Copied!", description: "Wallet ID copied to clipboard" });
-    }
-  };
+  const statCards = [
+    {
+      title: isAr ? "رأس المال" : "Capital",
+      value: `$${finances?.capital?.toLocaleString() || "0"}`,
+      sub: finances?.currency || "USD",
+      icon: DollarSign,
+      iconBg: "bg-blue-50",
+      iconColor: "text-primary",
+      trend: "+12.5%",
+      trendUp: true,
+    },
+    {
+      title: isAr ? "الأرباح" : "Profits",
+      value: `$${finances?.profits?.toLocaleString() || "0"}`,
+      sub: isAr ? "إجمالي الأرباح" : "Total profits",
+      icon: TrendingUp,
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-600",
+      trend: "+8.2%",
+      trendUp: true,
+    },
+    {
+      title: isAr ? "المبلغ المسترد" : "Recovered",
+      value: `$${finances?.total_recovered?.toLocaleString() || "0"}`,
+      sub: isAr ? "تم استرداده بنجاح" : "Successfully recovered",
+      icon: Shield,
+      iconBg: "bg-indigo-50",
+      iconColor: "text-indigo-600",
+      trend: "+5.1%",
+      trendUp: true,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold mb-1">{t("dashboard.overview")}</h1>
-        <p className="text-muted-foreground text-sm">
-          {language === "ar" ? "مرحباً بعودتك" : "Welcome back"}, {profile?.full_name || "User"}
-        </p>
-      </motion.div>
+      <SecurityWarningBanner />
 
       {finances?.amount_due > 0 && finances?.payment_status !== "paid" && (
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20"
-        >
-          <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">
-              {finances.payment_due_message || `Amount Due: $${finances.amount_due}`}
-            </p>
-            {finances.payment_deadline && (
-              <p className="text-xs text-muted-foreground">
-                Due by: {new Date(finances.payment_deadline).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-          <Button variant="destructive" size="sm">Pay Now</Button>
-        </motion.div>
+        <PaymentDueBanner
+          amountDue={finances.amount_due}
+          currency={finances.currency}
+          paymentMessage={finances.payment_due_message}
+          paymentDeadline={finances.payment_deadline}
+        />
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-2"
-        >
-          <Card className="wallet-gradient overflow-hidden">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardDescription className="text-muted-foreground/70">
-                    {language === "ar" ? "المحفظة الرئيسية" : "Global Wallet"}
-                  </CardDescription>
-                  <CardTitle className="text-3xl mt-2">
-                    ${(finances?.capital || 0).toLocaleString()}
-                  </CardTitle>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Shield className="h-3 w-3" />
-                  <span>{profile?.wallet_id || "iBC-XXXXX"}</span>
-                  <button onClick={copyWalletId}>
-                    <Copy className="h-3 w-3 ml-1 hover:text-primary" />
-                  </button>
-                </div>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">{profile?.full_name}</span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">{profile?.email}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">{language === "ar" ? "رأس المال" : "Capital"}</p>
-                <p className="text-lg font-bold">${(finances?.capital || 0).toLocaleString()}</p>
+      {finances?.admin_message && (
+        <Card className="glass-card border-primary/20">
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">{language === "ar" ? "الأرباح" : "Profits"}</p>
-                <p className="text-lg font-bold text-success">+${(finances?.profits || 0).toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">{language === "ar" ? "المسترد" : "Recovered"}</p>
-                <p className="text-lg font-bold text-primary">${(finances?.total_recovered || 0).toLocaleString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      <div className="p-4 rounded-2xl bg-amber-50/10 border border-amber-500/20">
-        <p className="text-xs text-amber-500 flex items-center gap-2">
-          <Shield className="h-3 w-3" />
-          {language === "ar"
-            ? "يتم قبول التحويلات فقط إلى المحافظ المدرجة في الموقع الإلكتروني."
-            : "Transfers are only accepted to wallets listed on the website."}
-        </p>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{language === "ar" ? "آخر التحديثات" : "Recent Updates"}</CardTitle>
-                <Bell className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {(!notifications || notifications.length === 0) ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  {language === "ar" ? "لا توجد تحديثات حديثة" : "No recent updates"}
+                <p className="font-semibold text-primary mb-1">
+                  {isAr ? "رسالة من فريق المعالجة" : "Processing Team Message"}
                 </p>
-              ) : (
-                <div className="space-y-3">
-                  {notifications.slice(0, 5).map((n) => (
-                    <div key={n.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-accent/50">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Bell className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{n.title}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                <p className="text-foreground">
+                  {finances.admin_message.replace(/admin/gi, isAr ? "فريق المعالجة" : "processing team").replace(/الأدمن|ادمن|للأدمن|الإدارة/g, "فريق المعالجة")}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{language === "ar" ? "حسابك" : "Your Account"}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {language === "ar" ? "حالة KYC" : "KYC Status"}
+      <WalletCard
+        fullName={profile?.full_name || null}
+        email={profile?.email || user?.email || ""}
+        walletId={profile?.wallet_id || ""}
+        country={profile?.country}
+        capital={finances?.capital || 0}
+        profits={finances?.profits || 0}
+        totalRecovered={finances?.total_recovered || 0}
+        currency={finances?.currency || "USD"}
+      />
+
+      <div className="grid md:grid-cols-3 gap-5">
+        {statCards.map((card, i) => (
+          <Card key={i} className="glass-card premium-card border-0">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-11 h-11 rounded-xl ${card.iconBg} flex items-center justify-center`}>
+                  <card.icon className={`h-5 w-5 ${card.iconColor}`} />
+                </div>
+                <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${card.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
+                  {card.trendUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {card.trend}
                 </span>
-                <Badge variant={useDashboard().kyc?.status === "approved" ? "success" : useDashboard().kyc?.status === "rejected" ? "destructive" : "warning"}>
-                  {useDashboard().kyc?.status || "pending"}
-                </Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {language === "ar" ? "حالة الحساب" : "Account Status"}
-                </span>
-                <Badge variant="success">{language === "ar" ? "نشط" : "Active"}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {language === "ar" ? "العملة" : "Currency"}
-                </span>
-                <span className="text-sm font-medium">{finances?.currency || "USD"}</span>
-              </div>
+              <p className="text-sm text-muted-foreground mb-1">{card.title}</p>
+              <p className="text-2xl font-bold text-foreground">{card.value}</p>
+              <p className="text-xs text-muted-foreground mt-1">{card.sub}</p>
             </CardContent>
           </Card>
-        </motion.div>
+        ))}
+      </div>
+
+      <Card className="glass-card border-0">
+        <CardContent className="p-0">
+          <div className="divide-y divide-border">
+            {[
+              { id: "bitcoin", symbol: "btc", name: "Bitcoin", price: 64059.00, change: -0.23, image: "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png" },
+              { id: "ethereum", symbol: "eth", name: "Ethereum", price: 1841.13, change: -1.71, image: "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png" },
+              { id: "tether", symbol: "usdt", name: "Tether", price: 0.9993, change: -0.00, image: "https://coin-images.coingecko.com/coins/images/325/large/Tether.png" },
+              { id: "binancecoin", symbol: "bnb", name: "BNB", price: 566.17, change: -1.55, image: "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png" },
+              { id: "ripple", symbol: "xrp", name: "XRP", price: 1.09, change: -0.32, image: "https://coin-images.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png" },
+              { id: "solana", symbol: "sol", name: "Solana", price: 75.19, change: -0.64, image: "https://coin-images.coingecko.com/coins/images/4128/large/solana.png" },
+              { id: "tron", symbol: "trx", name: "TRON", price: 0.3227, change: -0.09, image: "https://coin-images.coingecko.com/coins/images/1094/large/photo_2026-04-13_09-59-16.png" },
+              { id: "dogecoin", symbol: "doge", name: "Dogecoin", price: 0.0727, change: -0.93, image: "https://coin-images.coingecko.com/coins/images/5/large/dogecoin.png" },
+              { id: "cardano", symbol: "ada", name: "Cardano", price: 0.1660, change: 2.50, image: "https://coin-images.coingecko.com/coins/images/975/large/cardano.png" },
+              { id: "avalanche-2", symbol: "avax", name: "Avalanche", price: 6.59, change: 0.13, image: "https://coin-images.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png" },
+            ].map((coin) => (
+              <div key={coin.id} className="flex items-center justify-between px-6 py-3 hover:bg-accent/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+                  <div>
+                    <p className="font-medium text-sm text-foreground">{coin.name}</p>
+                    <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
+                  </div>
+                </div>
+                <div className="text-right min-w-[90px]">
+                  <p className="font-semibold text-sm text-foreground">${coin.price >= 1 ? coin.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : coin.price.toFixed(4)}</p>
+                  <p className={`text-xs flex items-center justify-end gap-0.5 ${coin.change >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                    {coin.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    {coin.change >= 0 ? "+" : ""}{coin.change.toFixed(2)}%
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid md:grid-cols-2 gap-5">
+        <Card className="glass-card border-0">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Shield className="h-4 w-4 text-primary" />
+              </div>
+              {isAr ? "حالة الحساب" : "Account Status"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40">
+                <span className="text-sm text-muted-foreground">{isAr ? "التحقق من الهوية" : "Identity Verification"}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  kyc?.status === "approved" ? "bg-emerald-50 text-emerald-700" :
+                  kyc?.status === "pending" ? "bg-amber-50 text-amber-700" :
+                  "bg-red-50 text-red-700"
+                }`}>
+                  {kyc?.status === "approved" ? (isAr ? "مُوثق" : "Verified") :
+                   kyc?.status === "pending" ? (isAr ? "قيد المراجعة" : "Pending") :
+                   (isAr ? "مرفوض" : "Rejected")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40">
+                <span className="text-sm text-muted-foreground">{isAr ? "حالة الحساب" : "Account Status"}</span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">{isAr ? "نشط" : "Active"}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card border-0">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Bell className="h-4 w-4 text-primary" />
+              </div>
+              {isAr ? "آخر التحديثات" : "Recent Updates"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {notifs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <Bell className="h-6 w-6 opacity-40" />
+                </div>
+                <p className="text-sm">{isAr ? "لا توجد إشعارات" : "No notifications"}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {notifs.slice(0, 5).map((n) => (
+                  <div
+                    key={n.id}
+                    onClick={() => navigate(`/notification/${n.id}`)}
+                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-muted/50 ${n.is_read ? "" : "bg-primary/[0.03]"}`}
+                  >
+                    <div className="mt-1">
+                      {!n.is_read && <span className="h-2 w-2 rounded-full bg-primary block" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{n.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{n.message}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {(() => {
+                          const diff = Date.now() - new Date(n.created_at).getTime();
+                          const mins = Math.floor(diff / 60000);
+                          const hours = Math.floor(diff / 3600000);
+                          const days = Math.floor(diff / 86400000);
+                          if (mins < 1) return isAr ? "الآن" : "just now";
+                          if (mins < 60) return isAr ? `منذ ${mins} دقيقة` : `${mins} min ago`;
+                          if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours} hour ago`;
+                          if (days < 7) return isAr ? `منذ ${days} يوم` : `${days} days ago`;
+                          return new Date(n.created_at).toLocaleDateString(isAr ? "ar" : "en", { year: "numeric", month: "short", day: "numeric" });
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
