@@ -36,10 +36,11 @@ serve(async (req) => {
     }
 
     // Store pending user data
-    await supabase.from("verification_codes").upsert(
-      { email, code, password, fullName, phone, expires_at: new Date(Date.now() + 600000).toISOString() },
+    const { error: dbError } = await supabase.from("verification_codes").upsert(
+      { email, code, password, full_name: fullName, phone, expires_at: new Date(Date.now() + 600000).toISOString() },
       { onConflict: "email" }
     );
+    if (dbError) throw new Error(dbError.message);
 
     return new Response(JSON.stringify({ success: true, code: RESEND_API_KEY ? null : code }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
