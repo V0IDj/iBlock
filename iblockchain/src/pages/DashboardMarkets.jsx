@@ -113,10 +113,10 @@ export function DashboardMarkets() {
     colorTheme: "light",
     width: "100%",
     height: 44,
-    utm_source: "iblock-chain.com",
+    utm_source: "localhost",
     utm_medium: "widget",
     utm_campaign: "ticker-tape",
-    page_uri: "iblock-chain.com/dashboard/markets",
+    page_uri: "localhost/dashboard/markets",
   }))}`;
 
   return (
