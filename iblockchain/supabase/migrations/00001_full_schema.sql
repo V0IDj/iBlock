@@ -109,7 +109,7 @@ create trigger on_auth_user_created
 -- ============================================================
 create table public.kyc_documents (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(user_id) on delete cascade,
+  user_id uuid not null references public.profiles(user_id) on delete cascade unique,
   passport_url text,
   id_front_url text,
   id_back_url text,
@@ -323,6 +323,13 @@ create table public.contact_messages (
 alter table public.contact_messages enable row level security;
 
 -- ============================================================
+-- HELPER: Security definer function to avoid recursive RLS
+-- ============================================================
+create or replace function public.is_admin() returns boolean
+language sql security definer stable
+as $$ select public.is_admin(); $$;
+
+-- ============================================================
 -- RLS POLICIES
 -- ============================================================
 
@@ -331,117 +338,117 @@ create policy "Users can view own profile" on public.profiles for select using (
 create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = user_id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = user_id);
 create policy "Admins can view all profiles" on public.profiles for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- USER ROLES
 create policy "Users can view own role" on public.user_roles for select using (auth.uid() = user_id);
 create policy "Admins can view all roles" on public.user_roles for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Super admins can insert roles" on public.user_roles for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'super_admin'));
+  with check (public.is_admin() and (select role from public.user_roles where user_id = auth.uid()) = 'super_admin');
 create policy "Super admins can update roles" on public.user_roles for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'super_admin'));
+  using (public.is_admin() and (select role from public.user_roles where user_id = auth.uid()) = 'super_admin');
 
 -- CLIENT FINANCES
 create policy "Users can view own finances" on public.client_finances for select using (auth.uid() = user_id);
 create policy "Admins can view all finances" on public.client_finances for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can update finances" on public.client_finances for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- KYC DOCUMENTS
 create policy "Users can view own KYC" on public.kyc_documents for select using (auth.uid() = user_id);
 create policy "Users can insert own KYC" on public.kyc_documents for insert with check (auth.uid() = user_id);
 create policy "Users can update own KYC" on public.kyc_documents for update using (auth.uid() = user_id);
 create policy "Admins can view all KYC" on public.kyc_documents for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can update any KYC" on public.kyc_documents for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- NOTIFICATIONS
 create policy "Users can view own notifications" on public.notifications for select using (auth.uid() = user_id);
 create policy "Users can mark own notifications read" on public.notifications for update using (auth.uid() = user_id);
 create policy "Admins can insert notifications" on public.notifications for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  with check (public.is_admin());
 
 -- MESSAGES
 create policy "Users can view own messages" on public.messages for select using (auth.uid() = user_id);
 create policy "Users can insert own messages" on public.messages for insert with check (auth.uid() = user_id and sender_role = 'user');
 create policy "Admins can view all messages" on public.messages for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can insert messages" on public.messages for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  with check (public.is_admin());
 
 -- DEPOSIT WALLETS
 create policy "All authenticated can view wallets" on public.deposit_wallets for select to authenticated using (true);
 create policy "Admins can manage wallets" on public.deposit_wallets for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  with check (public.is_admin());
 create policy "Admins can update wallets" on public.deposit_wallets for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can delete wallets" on public.deposit_wallets for delete
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- DEPOSIT REQUESTS
 create policy "Users can view own deposits" on public.deposit_requests for select using (auth.uid() = user_id);
 create policy "Users can insert deposits" on public.deposit_requests for insert with check (auth.uid() = user_id);
 create policy "Admins can view all deposits" on public.deposit_requests for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can update deposits" on public.deposit_requests for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- WITHDRAWAL REQUESTS
 create policy "Users can view own withdrawals" on public.withdrawal_requests for select using (auth.uid() = user_id);
 create policy "Users can insert withdrawals" on public.withdrawal_requests for insert with check (auth.uid() = user_id);
 create policy "Admins can view all withdrawals" on public.withdrawal_requests for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can update withdrawals" on public.withdrawal_requests for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- TRANSACTION LOG
 create policy "Users can view own transactions" on public.transaction_log for select using (auth.uid() = user_id);
 create policy "Admins can view all transactions" on public.transaction_log for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can insert transactions" on public.transaction_log for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  with check (public.is_admin());
 
 -- REFERRALS
 create policy "Users can view own referrals" on public.referrals for select using (auth.uid() = referrer_id);
 create policy "Users can insert own referral" on public.referrals for insert with check (auth.uid() = referrer_id);
 create policy "Admins can view all referrals" on public.referrals for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- MARKET ASSETS
 create policy "All authenticated can view market assets" on public.market_assets for select to authenticated using (true);
 create policy "Admins can manage market assets" on public.market_assets for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  with check (public.is_admin());
 create policy "Admins can update market assets" on public.market_assets for update
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- MARKET ORDERS
 create policy "Users can view own orders" on public.market_orders for select using (auth.uid() = user_id);
 create policy "Admins can view all orders" on public.market_orders for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- MARKET PAYMENT WALLETS
 create policy "All authenticated can view payment wallets" on public.market_payment_wallets for select to authenticated using (true);
 create policy "Admins can manage payment wallets" on public.market_payment_wallets for all
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- CLIENT MARKET HOLDINGS
 create policy "Users can view own holdings" on public.client_market_holdings for select using (auth.uid() = user_id);
 create policy "Admins can view all holdings" on public.client_market_holdings for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- ADMIN AUDIT LOG
 create policy "Admins can view audit log" on public.admin_audit_log for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 create policy "Admins can insert audit log" on public.admin_audit_log for insert
-  with check (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  with check (public.is_admin());
 
 -- CONTACT MESSAGES
 create policy "Anyone can submit contact" on public.contact_messages for insert to anon with check (true);
 create policy "Admins can view contact messages" on public.contact_messages for select
-  using (exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin')));
+  using (public.is_admin());
 
 -- ============================================================
 -- REALTIME SUBSCRIPTIONS
@@ -538,7 +545,7 @@ create policy "Admins can view all KYC files"
   on storage.objects for select
   using (
     bucket_id = 'kyc-documents' and
-    exists (select 1 from public.user_roles where user_id = auth.uid() and role in ('admin', 'super_admin'))
+    public.is_admin()
   );
 
 -- ============================================================

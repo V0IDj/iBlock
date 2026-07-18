@@ -30,10 +30,13 @@ export function KYCPending() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase.from("kyc_documents").select("status").eq("user_id", user.id).single();
+      const { data } = await supabase.from("kyc_documents").select("status").eq("user_id", user.id).maybeSingle();
       if (data) {
         setStatus(data.status);
         if (data.status === "approved") navigate("/dashboard");
+      } else {
+        navigate("/kyc");
+        return;
       }
       setLoading(false);
     })();
