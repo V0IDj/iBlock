@@ -37,7 +37,7 @@ export function LiveTicker() {
             }))
           );
         }
-      } catch {}
+      } catch (e) { console.warn("Failed to fetch prices:", e); }
     };
     fetchPrices();
     const interval = setInterval(fetchPrices, 60000);

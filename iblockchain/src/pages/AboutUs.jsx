@@ -118,7 +118,7 @@ export function AboutUs() {
       </section>
 
       <div className="border-t border-border mt-16 py-6 text-center text-sm text-muted-foreground">
-        © 2024 iBlockchain. {isAr ? "جميع الحقوق محفوظة." : "All Rights Reserved."}
+        © {new Date().getFullYear()} iBlockchain. {isAr ? "جميع الحقوق محفوظة." : "All Rights Reserved."}
       </div>
     </div>
   );

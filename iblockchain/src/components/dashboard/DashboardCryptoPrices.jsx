@@ -59,7 +59,7 @@ export function DashboardCryptoPrices() {
           setCoins(data.filter(c => !seen.has(c.id) && (seen.add(c.id), true)));
           setLive(true);
         }
-      } catch {}
+      } catch (e) { console.warn("CoinGecko fetch error:", e); }
     };
     fetchPrices();
     const interval = setInterval(fetchPrices, 60000);

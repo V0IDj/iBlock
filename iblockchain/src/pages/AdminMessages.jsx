@@ -60,7 +60,7 @@ export function AdminMessages() {
     if (!newMsg.trim() || !selectedUser) return;
     const { error } = await supabase.from("messages").insert({ user_id: selectedUser, content: newMsg.trim(), sender_role: "admin" });
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
     } else {
       setNewMsg("");
       loadMessages(selectedUser);

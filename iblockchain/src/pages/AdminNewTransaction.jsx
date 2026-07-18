@@ -44,7 +44,7 @@ export function AdminNewTransaction() {
 
   const handleSubmit = async () => {
     if (!userId || !type || !amount || Number(amount) <= 0) {
-      toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "يرجى ملء جميع الحقول المطلوبة" : "Please fill all required fields", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -63,7 +63,7 @@ export function AdminNewTransaction() {
       metadata: { admin_comment: adminComment || null, client_name: clientName, created_by_admin: true },
     });
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
       setSaving(false);
       return;
     }

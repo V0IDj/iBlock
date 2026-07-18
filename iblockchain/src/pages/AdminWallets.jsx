@@ -44,7 +44,7 @@ export function AdminWallets() {
   const saveWallet = async (wallet) => {
     setSavingId(wallet.id);
     const { error } = await supabase.from("deposit_wallets").update({ wallet_address: wallet.wallet_address, network: wallet.network, is_active: wallet.is_active }).eq("id", wallet.id);
-    toast(error ? { title: "Error", variant: "destructive" } : { title: "Saved", description: `${wallet.crypto_symbol} updated` });
+    toast(error ? { title: isAr ? "خطأ" : "Error", variant: "destructive" } : { title: "Saved", description: `${wallet.crypto_symbol} updated` });
     setSavingId(null);
   };
 

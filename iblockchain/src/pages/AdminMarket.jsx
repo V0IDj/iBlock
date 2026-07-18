@@ -74,7 +74,7 @@ export function AdminMarket() {
     };
     const q = editAsset.id ? supabase.from("market_assets").update(payload).eq("id", editAsset.id) : supabase.from("market_assets").insert(payload);
     const { error } = await q;
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    if (error) { toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" }); }
     else { toast({ title: "Saved" }); setAssetDialogOpen(false); setEditAsset(null); await fetchData(); }
     setSaving(false);
   };
@@ -89,7 +89,7 @@ export function AdminMarket() {
     };
     const q = editWallet.id ? supabase.from("market_payment_wallets").update(payload).eq("id", editWallet.id) : supabase.from("market_payment_wallets").insert(payload);
     const { error } = await q;
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    if (error) { toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" }); }
     else { toast({ title: "Saved" }); setWalletDialogOpen(false); setEditWallet(null); await fetchData(); }
     setSaving(false);
   };
@@ -97,7 +97,7 @@ export function AdminMarket() {
   const handleOrderAction = async (order, status) => {
     const note = orderNotes[order.id] || order.admin_note || null;
     const { error } = await supabase.from("market_orders").update({ status, admin_note: note }).eq("id", order.id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    if (error) { toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" }); }
     else {
       await supabase.from("notifications").insert({
         user_id: order.user_id,
@@ -261,7 +261,7 @@ export function AdminMarket() {
                         <TableCell><Button size="sm" onClick={async () => {
                           const val = Number(profitInputs[h.id] ?? h.profit_amount ?? 0);
                           const { error } = await supabase.from("client_market_holdings").update({ profit_amount: val }).eq("id", h.id);
-                          if (error) toast({ title: "Error", variant: "destructive" });
+                          if (error) toast({ title: isAr ? "خطأ" : "Error", variant: "destructive" });
                           else { toast({ title: "Updated" }); await fetchData(); }
                         }}>{isAr ? "حفظ" : "Save"}</Button></TableCell>
                       </TableRow>

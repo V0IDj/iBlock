@@ -55,7 +55,7 @@ export function PrivacyPolicy() {
         </div>
       </section>
 
-      <EnhancedFooter year={2024} />
+      <EnhancedFooter />
     </div>
   );
 }

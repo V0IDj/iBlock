@@ -110,8 +110,8 @@ export function DashboardDeposit() {
             <Label className="text-xs">{isAr ? "صورة الإيصال" : "Receipt Image"}</Label>
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => {
               const file = e.target.files?.[0]; if (!file) return;
-              if (!["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.type)) { toast({ title: "Error", description: "Please upload an image", variant: "destructive" }); return; }
-              if (file.size > 5242880) { toast({ title: "Error", description: "Max 5MB", variant: "destructive" }); return; }
+              if (!["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.type)) { toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "يرجى رفع صورة" : "Please upload an image", variant: "destructive" }); return; }
+              if (file.size > 5242880) { toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "الحد الأقصى 5 ميجابايت" : "Max 5MB", variant: "destructive" }); return; }
               setReceipt(file); const r = new FileReader(); r.onloadend = () => setReceiptPreview(r.result); r.readAsDataURL(file);
             }} className="hidden" />
             {receiptPreview ? (
@@ -139,7 +139,7 @@ export function DashboardDeposit() {
               if (dbErr) throw dbErr;
               toast({ title: isAr ? "تم الإرسال" : "Submitted", description: isAr ? "سيتم مراجعة طلبك" : "Your request will be reviewed" });
               setSelected(null); setReceipt(null); setReceiptPreview(null); setAmount(""); setTxHash("");
-            } catch (err) { toast({ title: "Error", description: err.message, variant: "destructive" }); }
+            } catch (err) { toast({ title: isAr ? "خطأ" : "Error", description: err.message, variant: "destructive" }); }
             setSending(false);
           }} disabled={!receipt || sending} className="w-full">
             {sending ? <LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}

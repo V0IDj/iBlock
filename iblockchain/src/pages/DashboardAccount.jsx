@@ -39,14 +39,14 @@ export function DashboardAccount() {
         setShow2fa(true);
       }
     } catch (err) {
-      toast({ title: "Error", description: err.message || "Failed to start 2FA setup", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: err.message || (isAr ? "فشل تفعيل المصادقة الثنائية" : "Failed to start 2FA setup"), variant: "destructive" });
     }
     setLoading2fa(false);
   };
 
   const handleVerify2fa = async () => {
     if (!verifyCode || verifyCode.length !== 6) {
-      toast({ title: "Error", description: isAr ? "أدخل رمز مكون من 6 أرقام" : "Enter a 6-digit code", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: isAr ? "أدخل رمز مكون من 6 أرقام" : "Enter a 6-digit code", variant: "destructive" });
       return;
     }
     setVerifying(true);

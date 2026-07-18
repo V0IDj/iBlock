@@ -109,7 +109,7 @@ export function DashboardMarket() {
           const data = await res.json();
           if (data.length > 0) setCoins(data);
         }
-      } catch { }
+      } catch (e) { console.warn("CoinGecko fetch error:", e); }
     })();
   }, []);
 

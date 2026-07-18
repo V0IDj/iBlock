@@ -109,7 +109,7 @@ export function DashboardWithdrawal() {
               if (error) throw error;
               toast({ title: isAr ? "تم الإرسال" : "Submitted" });
               fetchHistory(); setAmount(""); setAddress("");
-            } catch (err) { toast({ title: "Error", description: err.message, variant: "destructive" }); }
+            } catch (err) { toast({ title: isAr ? "خطأ" : "Error", description: err.message, variant: "destructive" }); }
             setSending(false);
           }} disabled={!amount || !address || sending} className="w-full">
             {sending ? <LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> : <ArrowUpFromLine className="h-4 w-4 mr-2" />}

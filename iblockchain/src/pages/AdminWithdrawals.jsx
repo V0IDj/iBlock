@@ -42,7 +42,7 @@ export function AdminWithdrawals() {
     setSaving(true);
     const { error } = await supabase.from("withdrawal_requests").update({ status, admin_note: note || null }).eq("id", selected.id);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
     } else {
       const prof = getProfile(selected.user_id);
       const clientName = prof?.full_name || prof?.email || "Unknown";

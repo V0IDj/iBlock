@@ -31,7 +31,7 @@ export function DashboardPrices() {
       try {
         const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds.join(",")}&order=market_cap_desc&sparkline=false&price_change_percentage_24h`);
         if (res.ok) { const d = await res.json(); if (d.length > 0) { setCoins(d); setLive(true); } }
-      } catch { }
+      } catch (e) { console.warn("CoinGecko fetch error:", e); }
       timer = setTimeout(fetchPrices, 60000);
     };
     fetchPrices();
