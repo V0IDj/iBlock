@@ -12,6 +12,11 @@ export function AdminProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
   const fetchData = useCallback(async () => {
     try {
       const { data: profileData } = await supabase
@@ -68,9 +73,11 @@ export function AdminProvider({ children }) {
         profiles,
         kycDocs,
         finances,
+        setKycDocs,
         getClientFinance,
         isSuperAdmin,
         loading,
+        handleLogout,
         refetch: fetchData,
       }}
     >

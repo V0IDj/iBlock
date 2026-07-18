@@ -107,9 +107,9 @@ export function AdminDeposits() {
                     <TableCell>{statusBadge(d.status)}</TableCell>
                     <TableCell>{new Date(d.created_at).toLocaleDateString(isAr ? "ar" : "en")}</TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm" onClick={async (dep) => {
-                        setSelected(dep); setComment(""); setReceiptUrl(null); setOpen(true);
-                        if (dep.receipt_url) { setLoadingReceipt(true); const { data } = await supabase.storage.from("deposit-receipts").createSignedUrl(dep.receipt_url, 3600); if (data?.signedUrl) setReceiptUrl(data.signedUrl); setLoadingReceipt(false); }
+                      <Button variant="outline" size="sm" onClick={async () => {
+                        setSelected(d); setComment(""); setReceiptUrl(null); setOpen(true);
+                        if (d.receipt_url) { setLoadingReceipt(true); const { data } = await supabase.storage.from("deposit-receipts").createSignedUrl(d.receipt_url, 3600); if (data?.signedUrl) setReceiptUrl(data.signedUrl); setLoadingReceipt(false); }
                       }}>
                         <Eye className="h-4 w-4 mr-1" />{isAr ? "مراجعة" : "Review"}
                       </Button>

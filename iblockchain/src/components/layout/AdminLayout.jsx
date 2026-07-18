@@ -29,7 +29,7 @@ const superAdminItems = [
 
 export function AdminLayout() {
   const { language, t, isRTL } = useLanguage();
-  const { isSuperAdmin, loading, kycDocs, handleLogout, refreshData } = useAdmin();
+  const { isSuperAdmin, loading, kycDocs, handleLogout, refetch: refreshData } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
