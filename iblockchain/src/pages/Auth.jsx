@@ -9,6 +9,23 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/useToast";
 import { Shield, ArrowLeft, Eye, EyeOff, LoaderCircle, User, Smartphone, Mail, Lock } from "lucide-react";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+const signupSchema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z.string().min(8, "Phone number required").max(20).regex(/^[\d\s\+\-\(\)]+$/, "Invalid phone number"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
 
 export function Auth() {
   const { t, isRTL, dir, language } = useLanguage();
@@ -18,6 +35,7 @@ export function Auth() {
   const mode = searchParams.get("mode") === "signup" ? "signup" : "login";
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
@@ -30,6 +48,10 @@ export function Auth() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrors({});
+    try { loginSchema.parse({ email: loginForm.email, password: loginForm.password }); } catch (err) {
+      if (err instanceof z.ZodError) { const e = {}; err.errors.forEach(i => { if (i.path[0]) e[i.path[0]] = i.message; }); setErrors(e); return; }
+    }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
       email: loginForm.email,
@@ -45,6 +67,10 @@ export function Auth() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setErrors({});
+    try { signupSchema.parse({ email: signupForm.email, password: signupForm.password, fullName: signupForm.fullName, phone: signupForm.phone, confirmPassword: signupForm.confirmPassword }); } catch (err) {
+      if (err instanceof z.ZodError) { const e = {}; err.errors.forEach(i => { if (i.path[0]) e[i.path[0]] = i.message; }); setErrors(e); return; }
+    }
     if (signupForm.password !== signupForm.confirmPassword) {
       toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
       return;

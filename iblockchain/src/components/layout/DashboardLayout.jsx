@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useDashboard } from "../../contexts/DashboardContext";
@@ -7,9 +7,14 @@ import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { ScrollArea } from "../ui/ScrollArea";
 import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from "../ui/DropdownMenu";
+import {
   LayoutDashboard, Wallet, Search, ChartLine, ShoppingCart, ArrowDownUp,
   Coins, ArrowDownToLine, ArrowUpFromLine, Receipt, Gift, MessageSquare,
-  Bell, User, LogOut, Menu, X, Globe, Shield, LayoutGrid, Clock,
+  Bell, User, LogOut, Menu, X, Globe, Shield, Clock, CheckCheck
 } from "lucide-react";
 
 const navItems = [
@@ -30,8 +35,9 @@ const navItems = [
 ];
 
 export function DashboardLayout() {
+  const navigate = useNavigate();
   const { language, t, isRTL, toggleLanguage } = useLanguage();
-  const { profile, loading, needsKyc, handleLogout, unreadCount } = useDashboard();
+  const { profile, loading, needsKyc, handleLogout, unreadCount, notifications, markAsRead, markAllAsRead } = useDashboard();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -149,16 +155,66 @@ export function DashboardLayout() {
           <Button variant="ghost" size="icon" onClick={toggleLanguage} className="hidden sm:flex">
             <Globe className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" asChild className="relative">
-            <Link to="/dashboard/notifications">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center animate-pulse"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </motion.span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 bg-card/95 backdrop-blur-xl border-white/10">
+              <div className="flex items-center justify-between p-3 border-b border-border">
+                <h3 className="font-semibold">{language === "ar" ? "الإشعارات" : "Notifications"}</h3>
+                {unreadCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs text-primary hover:text-primary/80">
+                    <CheckCheck className={`h-4 w-4 ${isRTL ? "ml-1" : "mr-1"}`} />
+                    {language === "ar" ? "قراءة الكل" : "Mark all read"}
+                  </Button>
+                )}
+              </div>
+              <ScrollArea className="h-[300px]">
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                    <Bell className="h-10 w-10 mb-3 opacity-50" />
+                    <p className="text-sm">{language === "ar" ? "لا توجد إشعارات" : "No notifications"}</p>
+                  </div>
+                ) : (
+                  notifications.slice(0, 10).map(n => (
+                    <div key={n.id} onClick={() => { markAsRead(n.id); navigate(`/notification/${n.id}`); }}
+                      className={`p-3 cursor-pointer hover:bg-accent/50 transition-colors ${n.is_read ? "" : "bg-primary/5"}`}>
+                      <div className="flex items-start gap-3 w-full">
+                        <div className="mt-0.5"><Bell className="h-4 w-4 text-muted-foreground" /></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{n.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
+                          <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>{new Date(n.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        {!n.is_read && <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </ScrollArea>
+              {notifications.length > 0 && (
+                <div className="p-2 border-t border-border">
+                  <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                    <Link to="/dashboard/notifications">{language === "ar" ? "عرض كل الإشعارات" : "View all notifications"}</Link>
+                  </Button>
+                </div>
               )}
-            </Link>
-          </Button>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <main className="p-4 md:p-8">
