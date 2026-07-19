@@ -421,6 +421,8 @@ create policy "Users can insert own profile" on public.profiles for insert with 
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = user_id);
 create policy "Admins can view all profiles" on public.profiles for select
   using (public.is_admin());
+create policy "Admins can update profiles" on public.profiles for update
+  using (public.is_admin());
 
 -- USER ROLES
 create policy "Users can view own role" on public.user_roles for select using (auth.uid() = user_id);

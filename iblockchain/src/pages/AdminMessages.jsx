@@ -71,12 +71,26 @@ export function AdminMessages() {
   const setPermission = async (userId, type) => {
     const updates = type === "none"
       ? { upload_permission: "none", upload_remaining: 0 }
-      : type === "single"
-        ? { upload_permission: "single", upload_remaining: 1 }
-        : { upload_permission: "active", upload_remaining: 0 };
-    const { error } = await supabase.from("profiles").update(updates).eq("user_id", userId);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: isAr ? "تم التحديث" : "Updated" }); loadUploadPerm(userId); setPermOpen(false); }
+      : { upload_permission: "active", upload_remaining: 0 };
+    const { data, error } = await supabase.from("profiles").update(updates).eq("user_id", userId).select();
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else if (!data || data.length === 0) {
+      toast({
+        title: isAr ? "خطأ" : "Error",
+        description: isAr ? "فشل التحديث — تحقق من صلاحيات المسؤول" : "Update failed — check admin permissions",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: isAr ? "تم التحديث" : "Updated",
+        description: type === "none"
+          ? (isAr ? "تم إزالة صلاحية الرفع" : "Upload permission removed")
+          : (isAr ? "تم تفعيل صلاحية الرفع" : "Upload permission activated")
+      });
+      loadUploadPerm(userId);
+      setPermOpen(false);
+    }
   };
 
   const sendMessage = async () => {
@@ -107,8 +121,7 @@ export function AdminMessages() {
 
   const permLabel = (p) => {
     if (!p || p.upload_permission === "none") return null;
-    if (p.upload_permission === "active") return isAr ? "📎 نشط" : "📎 Active";
-    return isAr ? `📎 رفع (${p.upload_remaining})` : `📎 Upload (${p.upload_remaining})`;
+    return isAr ? "📎 نشط" : "📎 Active";
   };
 
   if (loading) return <div className="flex justify-center py-12"><LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -182,13 +195,9 @@ export function AdminMessages() {
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
                           <X className="h-4 w-4 text-destructive" /> {isAr ? "إزالة الصلاحية" : "Remove access"}
                         </button>
-                        <button onClick={() => setPermission(selectedUser, "single")}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
-                          <Check className="h-4 w-4 text-primary" /> {isAr ? "مرة واحدة" : "One time"}
-                        </button>
                         <button onClick={() => setPermission(selectedUser, "active")}
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
-                          <Check className="h-4 w-4 text-primary" /> {isAr ? "تفعيل دائم" : "Active"}
+                          <Check className="h-4 w-4 text-primary" /> {isAr ? "تفعيل الرفع" : "Give access"}
                         </button>
                         {uploadPerm && uploadPerm.upload_permission !== "none" && (
                           <p className="text-xs text-muted-foreground px-2 pt-1 border-t">

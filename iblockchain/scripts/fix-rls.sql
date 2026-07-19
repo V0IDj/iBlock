@@ -17,9 +17,13 @@ CREATE POLICY "Super admins can insert roles" ON public.user_roles FOR INSERT
 CREATE POLICY "Super admins can update roles" ON public.user_roles FOR UPDATE
   USING (public.is_admin() AND (SELECT role FROM public.user_roles WHERE user_id = auth.uid()) = 'super_admin');
 
--- Fix profiles admin policy
+-- Fix profiles admin policies
 DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
 CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT
+  USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can update profiles" ON public.profiles;
+CREATE POLICY "Admins can update profiles" ON public.profiles FOR UPDATE
   USING (public.is_admin());
 
 -- Fix client_finances admin policies
