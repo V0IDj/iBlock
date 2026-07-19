@@ -1,4 +1,4 @@
--- ============================================================
+﻿-- ============================================================
 -- iBlockchain Complete Database Schema
 -- Run this in Supabase SQL Editor
 -- ============================================================
@@ -312,6 +312,72 @@ create table public.admin_audit_log (
 );
 alter table public.admin_audit_log enable row level security;
 
+-- AUDIT LOG TRIGGER: Auto-populate when key tables are modified
+create or replace function public.audit_log_trigger()
+returns trigger
+language plpgsql security definer
+set search_path = public
+as \$\$
+declare
+  _user_id uuid;
+  _admin_email text;
+begin
+  _user_id := auth.uid();
+
+  -- Only log when triggered by an admin user
+  if _user_id is not null and public.is_admin() then
+    -- Get admin email from profiles table
+    select email into _admin_email
+    from public.profiles
+    where user_id = _user_id;
+
+    insert into public.admin_audit_log (user_id, action, section, details, admin_email)
+    values (
+      _user_id,
+      tg_op::text,
+      tg_table_name,
+      case
+        when tg_op = 'DELETE' then to_jsonb(old)
+        else to_jsonb(new)
+      end,
+      _admin_email
+    );
+  end if;
+
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+\$\$;
+
+-- Triggers on individual tables
+create trigger trg_audit_deposit_requests
+  after insert or update on public.deposit_requests
+  for each row execute function public.audit_log_trigger();
+
+create trigger trg_audit_withdrawal_requests
+  after insert or update on public.withdrawal_requests
+  for each row execute function public.audit_log_trigger();
+
+create trigger trg_audit_client_finances
+  after insert or update on public.client_finances
+  for each row execute function public.audit_log_trigger();
+
+create trigger trg_audit_kyc_documents
+  after insert or update on public.kyc_documents
+  for each row execute function public.audit_log_trigger();
+
+create trigger trg_audit_deposit_wallets
+  after insert or update or delete on public.deposit_wallets
+  for each row execute function public.audit_log_trigger();
+
+create trigger trg_audit_notifications
+  after insert on public.notifications
+  for each row execute function public.audit_log_trigger();
+
+create trigger trg_audit_messages
+  after insert on public.messages
+  for each row execute function public.audit_log_trigger();
+
+
 -- ============================================================
 -- 17. CONTACT MESSAGES
 -- ============================================================
@@ -581,3 +647,4 @@ create policy "Admins can view all receipts" on storage.objects for select
 -- ============================================================
 -- UPDATE public.user_roles SET role = 'super_admin'
 -- WHERE user_id = (SELECT id FROM auth.users WHERE email = 'your@email.com');
+

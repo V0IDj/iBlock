@@ -29,7 +29,9 @@ export function AdminMessages() {
         loadConversations();
         if (selectedUser) loadMessages(selectedUser);
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") console.error("Admin messages channel error");
+      });
     return () => { supabase.removeChannel(channel); };
   }, []);
 
@@ -58,12 +60,12 @@ export function AdminMessages() {
 
   const sendMessage = async () => {
     if (!newMsg.trim() || !selectedUser) return;
-    const { error } = await supabase.from("messages").insert({ user_id: selectedUser, content: newMsg.trim(), sender_role: "admin" });
+    const { data, error } = await supabase.from("messages").insert({ user_id: selectedUser, content: newMsg.trim(), sender_role: "admin" }).select();
     if (error) {
       toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
-    } else {
+    } else if (data) {
+      setMessages(prev => [...prev, data[0]]);
       setNewMsg("");
-      loadMessages(selectedUser);
       loadConversations();
     }
   };

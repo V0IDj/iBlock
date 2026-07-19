@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useDashboard } from "../contexts/DashboardContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -15,6 +15,7 @@ export function DashboardSupport() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const scrollRef = useRef(null);
   const isAr = language === "ar";
 
   useEffect(() => {
@@ -23,11 +24,26 @@ export function DashboardSupport() {
     const channel = supabase.channel("support-messages")
       .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `user_id=eq.${user.id}` },
-        (payload) => setMessages(prev => [...prev, payload.new])
+          (payload) => {
+            // Only add messages from admin to avoid duplicates
+            // (user's own messages are already added by sendMessage() via .select())
+            if (payload.new.sender_role === "admin") {
+              setMessages(prev => [...prev, payload.new]);
+            }
+          }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") console.error("Support messages channel error");
+      });
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const loadMessages = async () => {
     if (!user) return;
@@ -43,10 +59,14 @@ export function DashboardSupport() {
   const sendMessage = async () => {
     if (!input.trim() || !user) return;
     setSending(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("messages")
-      .insert({ user_id: user.id, sender_role: "user", content: input.trim() });
-    if (!error) setInput("");
+      .insert({ user_id: user.id, sender_role: "user", content: input.trim() })
+      .select();
+    if (!error && data) {
+      setMessages(prev => [...prev, data[0]]);
+      setInput("");
+    }
     setSending(false);
   };
 
@@ -63,26 +83,26 @@ export function DashboardSupport() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessageSquare className="h-6 w-6" />
-          {isAr ? "الدعم والمراسلات" : "Support & Messages"}
+          {isAr ? "Ø§Ù„Ø¯Ø¹Ù… ÙˆØ§Ù„Ù…Ø±Ø§Ø³Ù„Ø§Øª" : "Support & Messages"}
         </h1>
         <p className="text-muted-foreground mt-1">
-          {isAr ? "تواصل مع فريق الدعم" : "Chat with support team"}
+          {isAr ? "ØªÙˆØ§ØµÙ„ Ù…Ø¹ ÙØ±ÙŠÙ‚ Ø§Ù„Ø¯Ø¹Ù…" : "Chat with support team"}
         </p>
       </div>
       <Card className="flex flex-col" style={{ height: "calc(100vh - 250px)", minHeight: 400 }}>
         <CardHeader className="pb-3 border-b">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            {isAr ? "المحادثة" : "Conversation"}
+            {isAr ? "Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©" : "Conversation"}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea ref={scrollRef} className="flex-1 p-4">
             {messages.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                <p>{isAr ? "لا توجد رسائل بعد" : "No messages yet"}</p>
+                <p>{isAr ? "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø±Ø³Ø§Ø¦Ù„ Ø¨Ø¹Ø¯" : "No messages yet"}</p>
                 <p className="text-xs mt-1">
-                  {isAr ? "أرسل رسالة لبدء المحادثة" : "Send a message to start"}
+                  {isAr ? "Ø£Ø±Ø³Ù„ Ø±Ø³Ø§Ù„Ø© Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©" : "Send a message to start"}
                 </p>
               </div>
             ) : (
@@ -103,10 +123,10 @@ export function DashboardSupport() {
                           const mins = Math.floor(diff / 60000);
                           const hours = Math.floor(diff / 3600000);
                           const days = Math.floor(diff / 86400000);
-                          if (mins < 1) return isAr ? "الآن" : "just now";
-                          if (mins < 60) return isAr ? `منذ ${mins} دقيقة` : `${mins}m ago`;
-                          if (hours < 24) return isAr ? `منذ ${hours} ساعة` : `${hours}h ago`;
-                          if (days < 7) return isAr ? `منذ ${days} يوم` : `${days}d ago`;
+                          if (mins < 1) return isAr ? "Ø§Ù„Ø¢Ù†" : "just now";
+                          if (mins < 60) return isAr ? `Ù…Ù†Ø° ${mins} Ø¯Ù‚ÙŠÙ‚Ø©` : `${mins}m ago`;
+                          if (hours < 24) return isAr ? `Ù…Ù†Ø° ${hours} Ø³Ø§Ø¹Ø©` : `${hours}h ago`;
+                          if (days < 7) return isAr ? `Ù…Ù†Ø° ${days} ÙŠÙˆÙ…` : `${days}d ago`;
                           return new Date(msg.created_at).toLocaleDateString(isAr ? "ar" : "en", { month: "short", day: "numeric" });
                         })()}
                       </p>
@@ -126,7 +146,7 @@ export function DashboardSupport() {
                   sendMessage();
                 }
               }}
-              placeholder={isAr ? "اكتب رسالتك..." : "Type your message..."}
+              placeholder={isAr ? "Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„ØªÙƒ..." : "Type your message..."}
               disabled={sending}
               className="flex-1"
             />
@@ -147,3 +167,4 @@ export function DashboardSupport() {
     </div>
   );
 }
+
