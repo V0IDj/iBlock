@@ -91,7 +91,10 @@ export function DashboardBuySell() {
 
   const filteredAssets = useMemo(() =>
     assets.filter(a => categoryFilter === "all" || a.category === categoryFilter)
-      .sort((a, b) => a.name.localeCompare(b.name)),
+      .sort((a, b) => {
+        const order = { crypto: 1, metal: 2, energy: 3, commodity: 4, stock: 5, forex: 6, plan: 7, service: 8 };
+        return (order[a.category] || 9) - (order[b.category] || 9) || a.name.localeCompare(b.name);
+      }),
     [assets, categoryFilter]
   );
 
@@ -359,6 +362,10 @@ export function DashboardBuySell() {
           </Card>
 
           <div className="grid grid-cols-1 gap-4">
+            <Card><CardContent className="p-4 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-primary/10"><Shield className="h-5 w-5 text-primary" /></div>
+              <div><p className="font-medium text-sm">{isAr ? "شروط واضحة" : "Clear Terms"}</p><p className="text-xs text-muted-foreground mt-1">{isAr ? "كل أصل يظهر شروطه قبل التنفيذ" : "Each asset shows terms before execution"}</p></div>
+            </CardContent></Card>
             <Card><CardContent className="p-4 flex items-start gap-3">
               <div className="p-2 rounded-lg bg-primary/10"><Zap className="h-5 w-5 text-primary" /></div>
               <div><p className="font-medium text-sm">{isAr ? "تنفيذ فوري" : "Instant Execution"}</p><p className="text-xs text-muted-foreground mt-1">{isAr ? "الرصيد والبيع والتداول تنفذ مباشرة" : "Balance, sell, and trade orders run instantly"}</p></div>
