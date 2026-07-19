@@ -127,7 +127,9 @@ export function DashboardProvider({ children }) {
           toast({ title: n.title, description: n.message });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") console.error("Notif channel error");
+      });
     const msgChannel = supabase
       .channel("messages-realtime")
       .on(
@@ -149,7 +151,9 @@ export function DashboardProvider({ children }) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") console.error("Messages channel error");
+      });
     const financeChannel = supabase
       .channel("finance-realtime")
       .on(
