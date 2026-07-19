@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/Tabs"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/Select";
 import { useToast } from "../hooks/useToast";
 import { supabase } from "../lib/supabase";
-import { ShoppingCart, DollarSign, RefreshCw, LoaderCircle, Wallet, ArrowRightLeft, CreditCard, Gem, Fuel, Coins, Boxes, Building2, CircleDollarSign, Zap, Clock } from "lucide-react";
+import { ShoppingCart, DollarSign, RefreshCw, LoaderCircle, Wallet, ArrowRightLeft, CreditCard, Gem, Fuel, Coins, Boxes, Building2, CircleDollarSign, Zap, Clock, Shield } from "lucide-react";
 
 const categoryLabels = {
   crypto: { en: "Crypto", ar: "عملات رقمية" },
@@ -51,6 +51,16 @@ export function DashboardBuySell() {
   const [processing, setProcessing] = useState(false);
 
   const balance = finances?.capital || 0;
+  
+  const cryptoImage = (symbol) => {
+    const map = { BTC:"https://assets.coingecko.com/coins/images/1/small/bitcoin.png", ETH:"https://assets.coingecko.com/coins/images/279/small/ethereum.png", USDT:"https://assets.coingecko.com/coins/images/325/small/Tether.png", BNB:"https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png", XRP:"https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png", SOL:"https://assets.coingecko.com/coins/images/4128/small/solana.png", DOGE:"https://assets.coingecko.com/coins/images/5/small/dogecoin.png", ADA:"https://assets.coingecko.com/coins/images/975/small/cardano.png", TRX:"https://assets.coingecko.com/coins/images/1094/small/tron-logo.png", AVAX:"https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png", DOT:"https://assets.coingecko.com/coins/images/12171/small/polkadot.png" };
+    return map[symbol.toUpperCase()] || "";
+  };
+  
+  const categoryImage = (cat) => {
+    const m = { metal: "/assets/market-gold-metals-CxynwGqD.jpg", energy: "/assets/market-oil-energy-CV2LSjKe.jpg", commodity: "/assets/market-commodities-BSBUi3zh.jpg", stock: "/assets/market-stocks-9ByAO9Zo.jpg", forex: "/assets/market-forex-CEwDH4Px.jpg" };
+    return m[cat] || "";
+  };
 
   const fetchData = async (refreshPrices = true) => {
     setLoading(true);
@@ -165,19 +175,19 @@ export function DashboardBuySell() {
                     >
                       <div className="h-24 bg-primary/10 relative overflow-hidden flex items-center justify-center">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-background/30 to-primary/5" />
-                        {asset.category === "metal" && <img src="/assets/market-gold-metals-CxynwGqD.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                        {asset.category === "energy" && <img src="/assets/market-oil-energy-CV2LSjKe.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                        {asset.category === "commodity" && <img src="/assets/market-commodities-BSBUi3zh.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                        {asset.category === "stock" && <img src="/assets/market-stocks-9ByAO9Zo.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                        {asset.category === "forex" && <img src="/assets/market-forex-CEwDH4Px.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                        <div className="h-14 w-14 rounded-2xl bg-background/80 text-primary flex items-center justify-center shadow-xl transition-transform group-hover:scale-110 relative">
-                          {asset.category === "crypto" ? <Coins className="h-8 w-8" /> :
-                           asset.category === "metal" ? <Gem className="h-8 w-8" /> :
-                           asset.category === "energy" ? <Fuel className="h-8 w-8" /> :
-                           asset.category === "commodity" ? <Boxes className="h-8 w-8" /> :
-                           asset.category === "stock" ? <Building2 className="h-8 w-8" /> :
-                           <CircleDollarSign className="h-8 w-8" />}
-                        </div>
+                        {categoryImage(asset.category) && <img src={categoryImage(asset.category)} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                        {cryptoImage(asset.symbol) ? (
+                          <img src={cryptoImage(asset.symbol)} alt={asset.symbol} loading="lazy" className="relative h-14 w-14 rounded-full shadow-xl" />
+                        ) : (
+                          <div className="h-14 w-14 rounded-2xl bg-background/80 text-primary flex items-center justify-center shadow-xl transition-transform group-hover:scale-110 relative">
+                            {asset.category === "metal" ? <Gem className="h-8 w-8" /> :
+                             asset.category === "energy" ? <Fuel className="h-8 w-8" /> :
+                             asset.category === "commodity" ? <Boxes className="h-8 w-8" /> :
+                             asset.category === "stock" ? <Building2 className="h-8 w-8" /> :
+                             asset.category === "forex" ? <CircleDollarSign className="h-8 w-8" /> :
+                             <Shield className="h-8 w-8" />}
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-background/65 via-background/5 to-transparent" />
                         <Badge className="absolute top-3 end-3" variant="secondary">{categoryLabels[asset.category]?.[language] || asset.category}</Badge>
                       </div>
