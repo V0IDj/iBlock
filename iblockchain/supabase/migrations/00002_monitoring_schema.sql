@@ -308,6 +308,7 @@ $$;
 -- ============================================================
 create or replace function public.upsert_session_heartbeat(
   _session_id text,
+  _user_id uuid default null,
   _device text default null,
   _browser text default null,
   _os text default null,
@@ -326,9 +327,12 @@ create or replace function public.upsert_session_heartbeat(
 ) returns void
 language plpgsql security definer
 as $$
+declare
+  _resolved_user_id uuid;
 begin
+  _resolved_user_id := coalesce(_user_id, auth.uid());
   insert into public.user_sessions (user_id, session_id, device, browser, os, screen_resolution, language, timezone, ip, country, region, city, isp, latitude, longitude, vpn_detected, proxy_detected, last_seen, is_active)
-  values (auth.uid(), _session_id, _device, _browser, _os, _screen_resolution, _language, _timezone, _ip, _country, _region, _city, _isp, _latitude, _longitude, _vpn_detected, _proxy_detected, now(), true)
+  values (_resolved_user_id, _session_id, _device, _browser, _os, _screen_resolution, _language, _timezone, _ip, _country, _region, _city, _isp, _latitude, _longitude, _vpn_detected, _proxy_detected, now(), true)
   on conflict (user_id, session_id)
   do update set
     last_seen = now(),

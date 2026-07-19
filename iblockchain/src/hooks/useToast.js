@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { toast as sonnerToast } from "sonner";
 
 export function useToast() {
-  return {
+  return useMemo(() => ({
     toast: ({ title, description, variant }) => {
       if (variant === "destructive") {
         sonnerToast.error(title, { description });
@@ -13,5 +14,5 @@ export function useToast() {
     error: (title, description) => sonnerToast.error(title, { description }),
     warning: (title, description) => sonnerToast.warning(title, { description }),
     info: (title, description) => sonnerToast.info(title, { description }),
-  };
+  }), []);
 }

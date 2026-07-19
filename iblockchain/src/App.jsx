@@ -53,6 +53,7 @@ const DashboardReferral = lazy(() => import("./pages/DashboardReferral").then((m
 
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,9 +94,11 @@ export default function App() {
               <Route
                 path="/dashboard"
                 element={
-                  <DashboardProvider>
-                    <DashboardLayout />
-                  </DashboardProvider>
+                  <ErrorBoundary>
+                    <DashboardProvider>
+                      <DashboardLayout />
+                    </DashboardProvider>
+                  </ErrorBoundary>
                 }
               >
                 <Route index element={<DashboardOverview />} />

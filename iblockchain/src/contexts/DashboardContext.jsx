@@ -214,7 +214,7 @@ export function DashboardProvider({ children }) {
     setUnreadCount(0);
   };
 
-  const needsKyc = !kyc;
+  const needsKyc = !kyc || kyc.status === "rejected";
 
   return (
     <DashboardContext.Provider
