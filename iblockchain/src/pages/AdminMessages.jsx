@@ -7,7 +7,7 @@ import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
-import { Search, User, Send, LoaderCircle } from "lucide-react";
+import { Search, User, Send, LoaderCircle, Upload, Check, X } from "lucide-react";
 
 export function AdminMessages() {
   const { language, isRTL } = useLanguage();
@@ -19,7 +19,11 @@ export function AdminMessages() {
   const [searchTerm, setSearchTerm] = useState("");
   const [newMsg, setNewMsg] = useState("");
   const [loading, setLoading] = useState(true);
+  const [uploadPerm, setUploadPerm] = useState(null);
+  const [permOpen, setPermOpen] = useState(false);
   const scrollRef = useRef(null);
+  const selectedUserRef = useRef(selectedUser);
+  useEffect(() => { selectedUserRef.current = selectedUser; }, [selectedUser]);
   const isAr = language === "ar";
 
   useEffect(() => {
@@ -27,7 +31,8 @@ export function AdminMessages() {
     const channel = supabase.channel("admin-messages")
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
         loadConversations();
-        if (selectedUser) loadMessages(selectedUser);
+        const uid = selectedUserRef.current;
+        if (uid) loadMessages(uid);
       })
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR") console.error("Admin messages channel error");
@@ -35,7 +40,7 @@ export function AdminMessages() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  useEffect(() => { if (selectedUser) loadMessages(selectedUser); }, [selectedUser]);
+  useEffect(() => { if (selectedUser) { loadMessages(selectedUser); loadUploadPerm(selectedUser); } }, [selectedUser]);
   useEffect(() => { scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight); }, [messages]);
 
   const loadConversations = async () => {
@@ -56,6 +61,22 @@ export function AdminMessages() {
     const { data } = await supabase.from("messages").select("*").eq("user_id", userId).order("created_at", { ascending: true });
     if (data) setMessages(data);
     await supabase.from("messages").update({ is_read: true }).eq("user_id", userId).eq("sender_role", "user").eq("is_read", false);
+  };
+
+  const loadUploadPerm = async (userId) => {
+    const { data } = await supabase.from("profiles").select("upload_permission, upload_remaining").eq("user_id", userId).single();
+    if (data) setUploadPerm(data);
+  };
+
+  const setPermission = async (userId, type) => {
+    const updates = type === "none"
+      ? { upload_permission: "none", upload_remaining: 0 }
+      : type === "single"
+        ? { upload_permission: "single", upload_remaining: 1 }
+        : { upload_permission: "limited", upload_remaining: 4 };
+    const { error } = await supabase.from("profiles").update(updates).eq("user_id", userId);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: isAr ? "تم التحديث" : "Updated" }); loadUploadPerm(userId); setPermOpen(false); }
   };
 
   const sendMessage = async () => {
@@ -82,6 +103,12 @@ export function AdminMessages() {
     if (diff < 3600000) return `${Math.floor(diff / 60000)}${isAr ? "د" : "m"}`;
     if (diff < 86400000) return new Date(date).toLocaleTimeString(isAr ? "ar" : "en", { hour: "2-digit", minute: "2-digit" });
     return new Date(date).toLocaleDateString(isAr ? "ar" : "en", { month: "short", day: "numeric" });
+  };
+
+  const permLabel = (p) => {
+    if (!p || p.upload_permission === "none") return null;
+    if (p.upload_permission === "single") return isAr ? `📎 رفع (${p.upload_remaining})` : `📎 Upload (${p.upload_remaining})`;
+    return isAr ? `📎 رفع (${p.upload_remaining})` : `📎 Upload (${p.upload_remaining})`;
   };
 
   if (loading) return <div className="flex justify-center py-12"><LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -131,13 +158,45 @@ export function AdminMessages() {
           {selectedUser ? (
             <>
               <div className="p-3 border-b flex-shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-5 w-5 text-primary" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{getProfile(selectedUser)?.full_name || getProfile(selectedUser)?.email}</p>
+                      <p className="text-xs text-muted-foreground">{getProfile(selectedUser)?.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">{getProfile(selectedUser)?.full_name || getProfile(selectedUser)?.email}</p>
-                    <p className="text-xs text-muted-foreground">{getProfile(selectedUser)?.email}</p>
+                  <div className="relative">
+                    <Button variant="outline" size="sm" onClick={() => setPermOpen(!permOpen)} className="gap-2">
+                      <Upload className="h-4 w-4" />
+                      {permLabel(uploadPerm) || (isAr ? "الرفع" : "Upload")}
+                    </Button>
+                    {permOpen && (
+                      <div className="absolute top-full right-0 mt-1 z-50 bg-popover border rounded-xl shadow-lg p-2 min-w-[200px] space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground px-2 py-1">
+                          {isAr ? "صلاحية رفع الملفات" : "File upload permission"}
+                        </p>
+                        <button onClick={() => setPermission(selectedUser, "none")}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
+                          <X className="h-4 w-4 text-destructive" /> {isAr ? "إزالة الصلاحية" : "Remove access"}
+                        </button>
+                        <button onClick={() => setPermission(selectedUser, "single")}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
+                          <Check className="h-4 w-4 text-primary" /> {isAr ? "مرة واحدة" : "One time"}
+                        </button>
+                        <button onClick={() => setPermission(selectedUser, "limited")}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
+                          <Check className="h-4 w-4 text-primary" /> {isAr ? "4 مرات" : "4 times"}
+                        </button>
+                        {uploadPerm && uploadPerm.upload_permission !== "none" && (
+                          <p className="text-xs text-muted-foreground px-2 pt-1 border-t">
+                            {isAr ? `المتبقي: ${uploadPerm.upload_remaining}` : `Remaining: ${uploadPerm.upload_remaining}`}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -145,7 +204,10 @@ export function AdminMessages() {
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_role === "admin" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${msg.sender_role === "admin" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>
-                      <p>{msg.content}</p>
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                      {msg.image_url && (
+                        <img src={msg.image_url} alt="Upload" className="mt-2 rounded-lg max-h-60 w-full object-cover cursor-pointer" onClick={() => window.open(msg.image_url, "_blank")} />
+                      )}
                       <p className={`text-[10px] mt-1 opacity-70 ${msg.sender_role === "admin" ? "text-end" : ""}`}>
                         {new Date(msg.created_at).toLocaleTimeString(isAr ? "ar" : "en", { hour: "2-digit", minute: "2-digit" })}
                       </p>
