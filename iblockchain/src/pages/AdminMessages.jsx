@@ -73,7 +73,7 @@ export function AdminMessages() {
       ? { upload_permission: "none", upload_remaining: 0 }
       : type === "single"
         ? { upload_permission: "single", upload_remaining: 1 }
-        : { upload_permission: "limited", upload_remaining: 4 };
+        : { upload_permission: "active", upload_remaining: 0 };
     const { error } = await supabase.from("profiles").update(updates).eq("user_id", userId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: isAr ? "تم التحديث" : "Updated" }); loadUploadPerm(userId); setPermOpen(false); }
@@ -107,7 +107,7 @@ export function AdminMessages() {
 
   const permLabel = (p) => {
     if (!p || p.upload_permission === "none") return null;
-    if (p.upload_permission === "single") return isAr ? `📎 رفع (${p.upload_remaining})` : `📎 Upload (${p.upload_remaining})`;
+    if (p.upload_permission === "active") return isAr ? "📎 نشط" : "📎 Active";
     return isAr ? `📎 رفع (${p.upload_remaining})` : `📎 Upload (${p.upload_remaining})`;
   };
 
@@ -186,9 +186,9 @@ export function AdminMessages() {
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
                           <Check className="h-4 w-4 text-primary" /> {isAr ? "مرة واحدة" : "One time"}
                         </button>
-                        <button onClick={() => setPermission(selectedUser, "limited")}
+                        <button onClick={() => setPermission(selectedUser, "active")}
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted/50 text-start">
-                          <Check className="h-4 w-4 text-primary" /> {isAr ? "4 مرات" : "4 times"}
+                          <Check className="h-4 w-4 text-primary" /> {isAr ? "تفعيل دائم" : "Active"}
                         </button>
                         {uploadPerm && uploadPerm.upload_permission !== "none" && (
                           <p className="text-xs text-muted-foreground px-2 pt-1 border-t">

@@ -55,6 +55,10 @@ create table public.profiles (
 );
 alter table public.profiles enable row level security;
 
+-- Upload permission for support chat file sharing
+alter table public.profiles add column if not exists upload_permission text not null default 'none' check (upload_permission in ('none', 'single', 'active'));
+alter table public.profiles add column if not exists upload_remaining integer not null default 0;
+
 -- ============================================================
 -- 3. CLIENT FINANCES (created early because triggers need it)
 -- ============================================================
@@ -154,6 +158,7 @@ create table public.messages (
   created_at timestamptz default now()
 );
 alter table public.messages enable row level security;
+alter table public.messages add column if not exists image_url text;
 
 -- ============================================================
 -- 7. DEPOSIT WALLETS
@@ -533,6 +538,7 @@ create policy "Admins can view contact messages" on public.contact_messages for 
 alter publication supabase_realtime add table public.notifications;
 alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.client_finances;
+alter publication supabase_realtime add table public.profiles;
 
 -- ============================================================
 -- EXECUTE_MARKET_ORDER RPC
@@ -640,6 +646,22 @@ create policy "Users can view own receipts" on storage.objects for select
 
 create policy "Admins can view all receipts" on storage.objects for select
   using (bucket_id = 'deposit-receipts' and public.is_admin());
+
+-- ============================================================
+-- STORAGE: chat-uploads bucket
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('chat-uploads', 'chat-uploads', true)
+on conflict (id) do nothing;
+
+create policy "Users can upload chat files" on storage.objects for insert
+  with check (bucket_id = 'chat-uploads' and auth.role() = 'authenticated' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Users can view own chat files" on storage.objects for select
+  using (bucket_id = 'chat-uploads' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+
+create policy "Admins can view all chat files" on storage.objects for select
+  using (bucket_id = 'chat-uploads' and public.is_admin());
 
 -- ============================================================
 -- AFTER SETUP: Make yourself admin

@@ -45,8 +45,11 @@ export function DashboardSupport() {
         { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
         () => { loadUploadPerm(); }
       )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); supabase.removeChannel(permChannel); };
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") console.error("Upload perm channel error");
+      });
+    const pollInterval = setInterval(() => { loadUploadPerm(); }, 3000);
+    return () => { supabase.removeChannel(channel); supabase.removeChannel(permChannel); clearInterval(pollInterval); };
   }, [user]);
 
   useEffect(() => {
@@ -61,7 +64,7 @@ export function DashboardSupport() {
     if (data) setUploadPerm(data);
   };
 
-  const canUpload = uploadPerm && uploadPerm.upload_permission !== "none" && uploadPerm.upload_remaining > 0;
+  const canUpload = uploadPerm && (uploadPerm.upload_permission === "active" || (uploadPerm.upload_permission === "single" && uploadPerm.upload_remaining > 0));
 
   const loadMessages = async () => {
     if (!user) return;
@@ -86,10 +89,12 @@ export function DashboardSupport() {
       const { data: { publicUrl } } = supabase.storage.from("chat-uploads").getPublicUrl(filePath);
       imageUrl = publicUrl;
 
-      const remain = uploadPerm.upload_remaining - 1;
-      const newPerm = remain <= 0 ? "none" : uploadPerm.upload_permission;
-      await supabase.from("profiles").update({ upload_permission: newPerm, upload_remaining: Math.max(0, remain) }).eq("user_id", user.id);
-      setUploadPerm({ upload_permission: newPerm, upload_remaining: Math.max(0, remain) });
+      if (uploadPerm.upload_permission === "single") {
+        const remain = uploadPerm.upload_remaining - 1;
+        const newPerm = remain <= 0 ? "none" : uploadPerm.upload_permission;
+        await supabase.from("profiles").update({ upload_permission: newPerm, upload_remaining: Math.max(0, remain) }).eq("user_id", user.id);
+        setUploadPerm({ upload_permission: newPerm, upload_remaining: Math.max(0, remain) });
+      }
     }
 
     const content = input.trim() || (isAr ? "📎 صورة" : "📎 Image");
