@@ -45,7 +45,7 @@ serve(async (req) => {
       email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { full_name: data.fullName, phone: data.phone },
+      user_metadata: { full_name: data.full_name, phone: data.phone },
     });
 
     if (signUpError) throw signUpError;

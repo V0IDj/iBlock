@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -38,6 +38,16 @@ export function Auth() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) navigate("/dashboard");
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) navigate("/dashboard");
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
     fullName: "",
@@ -60,8 +70,10 @@ export function Auth() {
         password: loginForm.password,
       });
       if (error) {
-        toast({ title: isAr ? "خطأ" : "Error", description: error.message, variant: "destructive" });
+        const msg = error.message.includes("Invalid login credentials") ? (isAr ? "البريد الإلكتروني أو كلمة المرور غير صحيحة" : "Invalid email or password") : error.message;
+        toast({ title: isAr ? "خطأ في تسجيل الدخول" : "Login Error", description: msg, variant: "destructive" });
       } else {
+        toast({ title: isAr ? "مرحباً بك!" : "Welcome back!", description: isAr ? "تم تسجيل الدخول بنجاح" : "Login successful" });
         navigate("/dashboard");
       }
     } catch (err) {
@@ -146,6 +158,7 @@ export function Auth() {
                     className="mt-1.5"
                     required
                   />
+                  {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
                 </div>
                 <div>
                   <Label htmlFor="password">{t("auth.password")}</Label>
@@ -165,6 +178,7 @@ export function Auth() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
                 </div>
                 <Button type="submit" variant="premium" className="w-full" disabled={loading}>
                   {loading && <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />}
@@ -179,6 +193,7 @@ export function Auth() {
                     <User className={`absolute ${isRTL ? "right-3" : "left-3"} top-3 h-4 w-4 text-muted-foreground`} />
                     <Input id="fullName" placeholder={t("auth.fullNamePlaceholder") || "Full Name"} value={signupForm.fullName} onChange={(e) => setSignupForm({ ...signupForm, fullName: e.target.value })} className={`mt-0 ${isRTL ? "pr-10" : "pl-10"}`} required />
                   </div>
+                  {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">{t("auth.phone")}</Label>
@@ -186,6 +201,7 @@ export function Auth() {
                     <Smartphone className={`absolute ${isRTL ? "right-3" : "left-3"} top-3 h-4 w-4 text-muted-foreground`} />
                     <Input id="phone" type="tel" placeholder="+1234567890" value={signupForm.phone} onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })} className={`mt-0 ${isRTL ? "pr-10" : "pl-10"}`} dir="ltr" required />
                   </div>
+                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">{t("auth.email")}</Label>
@@ -193,6 +209,7 @@ export function Auth() {
                     <Mail className={`absolute ${isRTL ? "right-3" : "left-3"} top-3 h-4 w-4 text-muted-foreground`} />
                     <Input id="signup-email" type="email" placeholder="example@email.com" value={signupForm.email} onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })} className={`mt-0 ${isRTL ? "pr-10" : "pl-10"}`} required />
                   </div>
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">{t("auth.password")}</Label>
@@ -210,6 +227,7 @@ export function Auth() {
                     <Lock className={`absolute ${isRTL ? "right-3" : "left-3"} top-3 h-4 w-4 text-muted-foreground`} />
                     <Input id="confirmPassword" type="password" placeholder="••••••••" value={signupForm.confirmPassword} onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })} className={`mt-0 ${isRTL ? "pr-10" : "pl-10"}`} required minLength={6} />
                   </div>
+                  {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
                 </div>
                 <Button type="submit" variant="premium" className="w-full" disabled={loading}>
                   {loading && <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />}

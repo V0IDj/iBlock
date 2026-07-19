@@ -26,7 +26,7 @@ export function AdminAudit() {
   const fetchLogs = async () => {
     setLoading(true);
     const [logRes, profRes] = await Promise.all([
-      supabase.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(1000),
       supabase.from("profiles").select("user_id, full_name, email"),
     ]);
     if (logRes.data) setLogs(logRes.data);
@@ -49,7 +49,7 @@ export function AdminAudit() {
     if (!d) return "-";
     const t = d;
     const user = getUserName(t.user_id);
-    if (log.section === "deposit_requests") {
+    if (log.table_name === "deposit_requests") {
       const amt = t.amount ? `$${Number(t.amount).toLocaleString()}` : "";
       const sym = t.crypto_symbol || "";
       const st = t.status || "";

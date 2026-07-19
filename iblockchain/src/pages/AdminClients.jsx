@@ -17,7 +17,7 @@ import { Search, SquarePen, Bell, MessageSquare, LoaderCircle } from "lucide-rea
 export function AdminClients() {
   const { t, isRTL, language } = useLanguage();
   const { toast } = useToast();
-  const { profiles, kycDocs, finances, setFinances } = useAdmin();
+  const { profiles, kycDocs, finances, setFinances, isSuperAdmin } = useAdmin();
   const [search, setSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [editFinance, setEditFinance] = useState(null);
@@ -53,34 +53,59 @@ export function AdminClients() {
       withdrawal_lock_message: editFinance.withdrawal_lock_message ?? null,
     }).eq("user_id", selectedClient.user_id);
     if (error) {
-      toast({ title: "Error", description: "Update failed", variant: "destructive" });
+      toast({ title: isAr ? "خطأ" : "Error", description: t("admin.updateError"), variant: "destructive" });
     } else {
       const changes = [];
-      if (old && editFinance.capital !== old.capital) changes.push(`${isAr ? "تحديث رأس المال" : "Capital update"}: $${old.capital} → $${editFinance.capital}`);
-      if (old && editFinance.profits !== old.profits) changes.push(`${isAr ? "تحديث الأرباح" : "Profits update"}: $${old.profits} → $${editFinance.profits}`);
-      if (old && editFinance.total_recovered !== old.total_recovered) changes.push(`${isAr ? "تحديث المسترد" : "Recovery update"}: $${old.total_recovered} → $${editFinance.total_recovered}`);
+      if (old && editFinance.capital !== old.capital) {
+        const diff = editFinance.capital - old.capital;
+        changes.push({
+          type: "capital_update", amount: Math.abs(diff),
+          desc: isAr ? `${diff > 0 ? "زيادة" : "خفض"} رأس المال من $${old.capital.toLocaleString()} إلى $${editFinance.capital.toLocaleString()}`
+                     : `Capital ${diff > 0 ? "increased" : "decreased"} from $${old.capital.toLocaleString()} to $${editFinance.capital.toLocaleString()}`
+        });
+      }
+      if (old && editFinance.profits !== old.profits) {
+        const diff = editFinance.profits - old.profits;
+        changes.push({
+          type: "profit_update", amount: Math.abs(diff),
+          desc: isAr ? `${diff > 0 ? "زيادة" : "خفض"} الأرباح من $${old.profits.toLocaleString()} إلى $${editFinance.profits.toLocaleString()}`
+                     : `Profits ${diff > 0 ? "increased" : "decreased"} from $${old.profits.toLocaleString()} to $${editFinance.profits.toLocaleString()}`
+        });
+      }
+      if (old && editFinance.total_recovered !== old.total_recovered) {
+        const diff = editFinance.total_recovered - old.total_recovered;
+        changes.push({
+          type: "recovery_update", amount: Math.abs(diff),
+          desc: isAr ? `${diff > 0 ? "زيادة" : "خفض"} الاسترداد من $${old.total_recovered.toLocaleString()} إلى $${editFinance.total_recovered.toLocaleString()}`
+                     : `Recovery ${diff > 0 ? "increased" : "decreased"} from $${old.total_recovered.toLocaleString()} to $${editFinance.total_recovered.toLocaleString()}`
+        });
+      }
 
       if (changes.length > 0) {
-        await Promise.all(changes.map(desc =>
+        const baseMetadata = {
+          admin_action: true, admin_comment: adminComment || null,
+          old_values: { capital: old?.capital, profits: old?.profits, total_recovered: old?.total_recovered },
+          new_values: { capital: editFinance.capital, profits: editFinance.profits, total_recovered: editFinance.total_recovered },
+          client_name: selectedClient.full_name || selectedClient.email
+        };
+        const baseNotification = changes.map(c => c.desc).join("\n");
+        await Promise.all(changes.map(c =>
           supabase.from("transaction_log").insert({
             user_id: selectedClient.user_id,
-            type: "adjustment",
-            amount: 0,
-            currency: "USD",
-            status: "completed",
-            description: adminComment ? `${desc} | ${adminComment}` : desc,
-            metadata: { admin_action: true, admin_comment: adminComment || null, client_name: selectedClient.full_name || selectedClient.email },
+            type: c.type, amount: c.amount, currency: "USD", status: "completed",
+            description: adminComment ? `${c.desc} | ${adminComment}` : c.desc,
+            metadata: baseMetadata,
           })
         ));
       }
-      if (sendNotif) {
+      if (sendNotif && changes.length > 0) {
         await supabase.from("notifications").insert({
           user_id: selectedClient.user_id,
           title: isAr ? "📊 تحديث مالي على حسابك" : "📊 Financial Update on Your Account",
-          message: adminComment ? `${changes.join("\n")}\n\n${adminComment}` : changes.join("\n"),
+          message: adminComment ? `${baseNotification}\n\n${adminComment}` : baseNotification,
         });
       }
-      toast({ title: "Updated", description: "Client finances updated" });
+      toast({ title: isAr ? "تم التحديث" : "Updated", description: t("admin.clientUpdated") });
       setEditOpen(false);
       setAdminComment("");
       setSendNotif(false);
@@ -146,6 +171,7 @@ export function AdminClients() {
               <TableRow>
                 <TableHead>{isAr ? "الاسم" : "Name"}</TableHead>
                 <TableHead>{isAr ? "البريد" : "Email"}</TableHead>
+                {isSuperAdmin && <TableHead>{isAr ? "الهاتف" : "Phone"}</TableHead>}
                 <TableHead>KYC</TableHead>
                 <TableHead>{isAr ? "رأس المال" : "Capital"}</TableHead>
                 <TableHead>{isAr ? "الأرباح" : "Profits"}</TableHead>
@@ -161,6 +187,7 @@ export function AdminClients() {
                   <TableRow key={client.id}>
                     <TableCell>{client.full_name || "-"}</TableCell>
                     <TableCell>{client.email}</TableCell>
+                    {isSuperAdmin && <TableCell dir="ltr">{client.phone || "-"}</TableCell>}
                     <TableCell>
                       <Badge variant={kyc?.status === "approved" ? "default" : kyc?.status === "pending" ? "secondary" : kyc?.status === "rejected" ? "destructive" : "outline"}>
                         {kyc?.status === "approved" ? (isAr ? "موثق" : "Verified") : kyc?.status === "pending" ? (isAr ? "معلق" : "Pending") : kyc?.status === "rejected" ? (isAr ? "مرفوض" : "Rejected") : (isAr ? "لم يقدم" : "Not submitted")}

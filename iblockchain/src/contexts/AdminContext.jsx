@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../hooks/useToast";
+import { useLanguage } from "./LanguageContext";
 
 const AdminContext = createContext();
 
@@ -11,6 +13,8 @@ export function AdminProvider({ children }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -44,31 +48,25 @@ export function AdminProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        navigate("/auth");
-        return;
-      }
-      // Grant admin access for known admin emails
-      if (user.email === "kalitest928ya@gmail.com") {
-        setIsSuperAdmin(true);
-        fetchData();
-        return;
-      }
-      supabase
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) { if (!user) navigate("/auth"); return; }
+      const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", ["admin", "super_admin"])
-        .then(({ data }) => {
-          if (!data || data.length === 0) {
-            navigate("/dashboard");
-            return;
-          }
-          setIsSuperAdmin(data.some((r) => r.role === "super_admin"));
-          fetchData();
-        });
-    });
+        .in("role", ["admin", "super_admin"]);
+      if (!roles || roles.length === 0) {
+        toast({ title: t("admin.unauthorized"), description: t("admin.noPermission"), variant: "destructive" });
+        navigate("/dashboard"); return;
+      }
+      if (!cancelled) {
+        setIsSuperAdmin(roles.some((r) => r.role === "super_admin"));
+        fetchData();
+      }
+    })();
+    return () => { cancelled = true; };
   }, [navigate, fetchData]);
 
   const getClientFinance = (userId) => finances[userId] || null;
@@ -81,6 +79,7 @@ export function AdminProvider({ children }) {
         finances,
         setKycDocs,
         setFinances,
+        setProfiles,
         getClientFinance,
         isSuperAdmin,
         loading,
