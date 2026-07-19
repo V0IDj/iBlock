@@ -332,7 +332,13 @@ alter table public.contact_messages enable row level security;
 -- ============================================================
 create or replace function public.is_admin() returns boolean
 language sql security definer stable
-as $$ select public.is_admin(); $$;
+as $$
+  select exists (
+    select 1 from public.user_roles
+    where user_id = auth.uid()
+    and role in ('admin', 'super_admin')
+  );
+$$;
 
 -- ============================================================
 -- RLS POLICIES

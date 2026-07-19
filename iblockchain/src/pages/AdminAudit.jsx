@@ -56,19 +56,19 @@ export function AdminAudit() {
       if (log.action === "INSERT") return isAr ? `إيداع جديد ${amt} ${sym} - ${user}` : `New deposit ${amt} ${sym} - ${user}`;
       return isAr ? `تحديث إيداع ${amt} ${sym} → ${st} - ${user}` : `Deposit updated ${amt} ${sym} → ${st} - ${user}`;
     }
-    if (log.section === "withdrawal_requests") {
+    if (log.table_name === "withdrawal_requests") {
       const amt = t.amount ? `$${Number(t.amount).toLocaleString()}` : "";
       const st = t.status || "";
       const net = t.network || "";
       if (log.action === "INSERT") return isAr ? `طلب سحب ${amt} شبكة ${net} - ${user}` : `Withdrawal ${amt} on ${net} - ${user}`;
       return isAr ? `تحديث سحب ${amt} → ${st} - ${user}` : `Withdrawal updated ${amt} → ${st} - ${user}`;
     }
-    if (log.section === "client_finances") {
+    if (log.table_name === "client_finances") {
       const cap = t.capital != null ? `$${Number(t.capital).toLocaleString()}` : "";
       const prof = t.profits != null ? `$${Number(t.profits).toLocaleString()}` : "";
       return isAr ? `تحديث مالي - رأس المال: ${cap}, أرباح: ${prof} - ${user}` : `Finance - Capital: ${cap}, Profits: ${prof} - ${user}`;
     }
-    if (log.section === "kyc_documents") {
+    if (log.table_name === "kyc_documents") {
       const st = String(t.status || "");
       const label = isAr ? { pending: "قيد المراجعة", approved: "مقبول", rejected: "مرفوض" }[st] || st : st;
       if (log.action === "UPDATE") return isAr ? `مراجعة KYC → ${label} - ${user}` : `KYC → ${label} - ${user}`;
@@ -77,10 +77,10 @@ export function AdminAudit() {
     return JSON.stringify(t).slice(0, 120);
   };
 
-  const sections = [...new Set(logs.map(l => l.section))];
+  const sections = [...new Set(logs.map(l => l.table_name))];
   const filtered = logs.filter(l => {
     const matchSearch = !search || (l.admin_email || "").toLowerCase().includes(search.toLowerCase()) || formatDetail(l).toLowerCase().includes(search.toLowerCase());
-    const matchSection = sectionFilter === "all" || l.section === sectionFilter;
+    const matchSection = sectionFilter === "all" || l.table_name === sectionFilter;
     const matchAction = actionFilter === "all" || l.action === actionFilter;
     return matchSearch && matchSection && matchAction;
   });
@@ -146,7 +146,7 @@ export function AdminAudit() {
                            log.action === "DELETE" ? <Badge variant="destructive">{isAr ? "حذف" : "Delete"}</Badge> :
                            <Badge variant="secondary">{log.action}</Badge>}
                         </td>
-                        <td className="p-4"><span className="mr-1">{sectionIcons[log.section] || "📋"}</span><Badge variant="outline">{sectionLabels[log.section]?.[isAr ? "ar" : "en"] || log.section}</Badge></td>
+                        <td className="p-4"><span className="mr-1">{sectionIcons[log.table_name] || "📋"}</span><Badge variant="outline">{sectionLabels[log.table_name]?.[isAr ? "ar" : "en"] || log.table_name}</Badge></td>
                         <td className="p-4 max-w-md text-sm">{formatDetail(log)}</td>
                       </tr>
                       {isExpanded && log.details && (

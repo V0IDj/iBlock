@@ -49,10 +49,10 @@ export function AdminWithdrawals() {
       const msg = note ? `$${Number(selected.amount).toLocaleString()} - ${selected.network}\n${note}` : `$${Number(selected.amount).toLocaleString()} - ${selected.network}`;
       await supabase.from("notifications").insert({
         user_id: selected.user_id,
-        title: status === "approved" ? (isAr ? "تمت الموافقة على السحب" : "Withdrawal Approved") : (isAr ? "تم رفض السحب" : "Withdrawal Rejected"),
+        title: status === "approved" ? (isAr ? "✅ تمت الموافقة على السحب" : "✅ Withdrawal Approved") : status === "completed" ? (isAr ? "✅ تم إتمام السحب" : "✅ Withdrawal Completed") : (isAr ? "❌ تم رفض السحب" : "❌ Withdrawal Rejected"),
         message: msg,
       });
-      const logDesc = `${isAr ? "سحب" : "Withdrawal"} ${status === "approved" ? (isAr ? "مقبول" : "approved") : status === "rejected" ? (isAr ? "مرفوض" : "rejected") : status} - ${selected.network}`;
+      const logDesc = `${isAr ? "سحب" : "Withdrawal"} ${status === "approved" ? (isAr ? "مقبول" : "approved") : status === "completed" ? (isAr ? "مكتمل" : "completed") : status === "rejected" ? (isAr ? "مرفوض" : "rejected") : status} - ${selected.network}`;
       const fullDesc = note ? `${logDesc} | ${note}` : logDesc;
       const { data: existingLog } = await supabase.from("transaction_log").select("id").eq("reference_id", selected.id).eq("type", "withdrawal").limit(1);
       const meta = { network: selected.network, wallet_address: selected.wallet_address, admin_note: note || null, client_name: clientName };
@@ -140,7 +140,7 @@ export function AdminWithdrawals() {
                 {selected.status !== "rejected" && <Button onClick={() => handleAction("rejected")} disabled={saving} variant="destructive" className="flex-1">
                   {saving ? <LoaderCircle className="h-4 w-4 animate-spin mr-2" /> : <CircleX className="h-4 w-4 mr-2" />}{isAr ? "رفض" : "Reject"}</Button>}
                 {selected.status !== "completed" && <Button onClick={() => handleAction("completed")} disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  {isAr ? "إتمام" : "Complete"}</Button>}
+                  {saving ? <LoaderCircle className="h-4 w-4 animate-spin mr-2" /> : <CircleCheckBig className="h-4 w-4 mr-2" />}{isAr ? "إتمام العملية" : "Complete"}</Button>}
               </div>
             </div>
           )}

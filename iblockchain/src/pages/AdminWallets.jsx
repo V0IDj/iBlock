@@ -14,6 +14,7 @@ import { Wallet, Plus, Save, Trash2, LoaderCircle } from "lucide-react";
 const coinMeta = {
   ETH: { color: "from-blue-500 to-indigo-600", icon: "Ξ" }, USDT: { color: "from-emerald-500 to-green-600", icon: "₮" },
   SOL: { color: "from-purple-500 to-violet-600", icon: "◎" }, BTC: { color: "from-orange-500 to-yellow-600", icon: "₿" },
+  TRC: { color: "from-red-500 to-rose-600", icon: "₮" },
   TRX: { color: "from-red-500 to-rose-600", icon: "₮" },
 };
 
@@ -73,13 +74,13 @@ export function AdminWallets() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5" />{isAr ? "إدارة المحافظ" : "Wallet Management"}</CardTitle>
-          <Button onClick={() => setAddMode(!addMode)} variant={addMode ? "secondary" : "default"} size="sm">
-            <Plus className="h-4 w-4 mr-1" />{isAr ? "إضافة" : "Add"}
-          </Button>
+          {isSuperAdmin && <Button onClick={() => setAddMode(!addMode)} variant={addMode ? "secondary" : "default"} size="sm">
+            <Plus className="h-4 w-4 mr-1" />{isAr ? "إضافة عملة جديدة" : "Add New Currency"}
+          </Button>}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {addMode && (
+        {addMode && isSuperAdmin && (
           <div className="border-2 border-dashed border-primary/40 rounded-xl p-4 space-y-4 bg-primary/5">
             <h4 className="font-semibold text-sm">{isAr ? "إضافة محفظة جديدة" : "Add New Wallet"}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
