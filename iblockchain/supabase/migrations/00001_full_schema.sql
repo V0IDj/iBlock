@@ -6,6 +6,11 @@
 -- 0. EXTENSIONS
 create extension if not exists "pgcrypto";
 
+-- 0b. SCHEMA PERMISSIONS (for edge functions & public access)
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+
 -- ============================================================
 -- 0a. VERIFICATION CODES (for edge functions)
 -- ============================================================
