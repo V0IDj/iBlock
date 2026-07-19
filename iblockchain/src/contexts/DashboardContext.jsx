@@ -181,7 +181,7 @@ export function DashboardProvider({ children }) {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(financeChannel);
     };
-  }, [user, fetchNotifications, toast]);
+  }, [user, fetchNotifications]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
