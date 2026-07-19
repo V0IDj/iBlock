@@ -25,6 +25,9 @@ create table public.verification_codes (
 );
 alter table public.verification_codes enable row level security;
 
+-- Revoke anon/authenticated privileges (sensitive - stores pending passwords)
+revoke all on public.verification_codes from anon, authenticated;
+
 -- ============================================================
 -- 1. USER ROLES (created early because triggers need it)
 -- ============================================================

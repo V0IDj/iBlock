@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { useTracking } from "../../hooks/useTracking";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { ScrollArea } from "../ui/ScrollArea";
@@ -162,8 +163,10 @@ function NotificationsDropdown({ notifications, unreadCount, onMarkAsRead, onMar
 export function DashboardLayout() {
   const navigate = useNavigate();
   const { language, toggleLanguage, isRTL } = useLanguage();
-  const { profile, loading, needsKyc, handleLogout, unreadCount, notifications, markAsRead, markAllAsRead } = useDashboard();
+  const { profile, loading, needsKyc, handleLogout, unreadCount, notifications, markAsRead, markAllAsRead, user } = useDashboard();
   const location = useLocation();
+
+  useTracking(user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAr = language === "ar";
 

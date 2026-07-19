@@ -34,6 +34,7 @@ const AdminNewTransaction = lazy(() => import("./pages/AdminNewTransaction").the
 const AdminMarket = lazy(() => import("./pages/AdminMarket").then((m) => ({ default: m.AdminMarket })));
 const AdminSendNotification = lazy(() => import("./pages/AdminSendNotification").then((m) => ({ default: m.AdminSendNotification })));
 const AdminUserMonitoring = lazy(() => import("./pages/AdminUserMonitoring").then((m) => ({ default: m.AdminUserMonitoring })));
+const AdminUserDetail = lazy(() => import("./pages/AdminUserDetail").then((m) => ({ default: m.AdminUserDetail })));
 const AdminFinancialAudit = lazy(() => import("./pages/AdminFinancialAudit").then((m) => ({ default: m.AdminFinancialAudit })));
 const DashboardSupport = lazy(() => import("./pages/DashboardSupport").then((m) => ({ default: m.DashboardSupport })));
 const DashboardDeposit = lazy(() => import("./pages/DashboardDeposit").then((m) => ({ default: m.DashboardDeposit })));
@@ -135,6 +136,7 @@ export default function App() {
                 <Route path="market" element={<AdminMarket />} />
                 <Route path="send-notification" element={<AdminSendNotification />} />
                 <Route path="user-monitoring" element={<AdminUserMonitoring />} />
+                <Route path="user-monitoring/:userId" element={<AdminUserDetail />} />
                 <Route path="financial-audit" element={<AdminFinancialAudit />} />
               </Route>
 

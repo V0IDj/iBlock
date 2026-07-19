@@ -85,6 +85,14 @@ create table public.financial_audit_log (
 alter table public.financial_audit_log enable row level security;
 
 -- ============================================================
+-- SERVICE ROLE GRANTS (tables created after initial grant all)
+-- ============================================================
+grant all on public.user_sessions to anon, authenticated, service_role;
+grant all on public.user_activity_log to anon, authenticated, service_role;
+grant all on public.admin_action_log to anon, authenticated, service_role;
+grant all on public.financial_audit_log to anon, authenticated, service_role;
+
+-- ============================================================
 -- INDEXES for performance
 -- ============================================================
 

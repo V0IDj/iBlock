@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
@@ -64,6 +65,8 @@ export function AdminUserMonitoring() {
   const { language } = useLanguage();
   const isAr = language === "ar";
 
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profiles, setProfiles] = useState([]);
@@ -78,18 +81,107 @@ export function AdminUserMonitoring() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
-    const [profRes, auditRes] = await Promise.all([
-      supabase.from("profiles").select("*"),
+    const [profRes, auditRes, sessionsRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, full_name, email, avatar_url"),
       supabase.from("admin_audit_log").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("user_sessions").select("*").order("last_seen", { ascending: false }),
     ]);
     if (profRes.data) setProfiles(profRes.data);
     if (auditRes.data) setAuditLogs(auditRes.data);
 
-    generateMockData(profRes.data || [], auditRes.data || []);
+    const profs = profRes.data || [];
+    const sessData = sessionsRes.data || [];
+    const now = Date.now();
+
+    const online = sessData
+      .filter(s => s.is_active && new Date(s.last_seen).getTime() > now - 300000)
+      .map(s => {
+        const p = profs.find(pr => pr.user_id === s.user_id);
+        return {
+          user_id: s.user_id,
+          full_name: p?.full_name || p?.email || s.user_id?.slice(0, 8),
+          email: p?.email || "",
+          avatar: p?.avatar_url || null,
+          status: s.is_active ? "active" : "idle",
+          currentPage: "/dashboard",
+          idleTime: Math.floor((now - new Date(s.last_seen).getTime()) / 1000),
+          sessionDuration: Math.floor((now - new Date(s.first_seen).getTime()) / 1000),
+          device: s.device || "",
+          ip: s.ip || "",
+          country: s.country || "",
+          city: s.city || "",
+          lastActive: s.last_seen,
+        };
+      });
+    setOnlineUsers(online);
+
+    const sess = sessData.map(s => {
+      const p = profs.find(pr => pr.user_id === s.user_id);
+      return {
+        id: s.id,
+        user_id: s.user_id,
+        full_name: p?.full_name || p?.email || s.user_id?.slice(0, 8),
+        email: p?.email || "",
+        device: s.browser || s.device || "",
+        browser: s.browser || "",
+        os: s.os || "",
+        ip: s.ip || "",
+        country: s.country || "",
+        city: s.city || "",
+        isp: s.isp || "",
+        firstSeen: s.first_seen,
+        lastSeen: s.last_seen,
+        status: s.is_active ? "active" : "expired",
+      };
+    });
+    setSessions(sess);
+
+    const susp = [];
+    const seenUsers = {};
+    sessData.forEach(s => {
+      if (s.vpn_detected || s.proxy_detected) {
+        const p = profs.find(pr => pr.user_id === s.user_id);
+        susp.push({
+          id: `vpn-${s.id}`,
+          type: "vpn",
+          user_id: s.user_id,
+          full_name: p?.full_name || p?.email || s.user_id?.slice(0, 8),
+          email: p?.email || "",
+          detail: isAr ? "تم اكتشاف VPN/Proxy" : "VPN/Proxy detected",
+          ip: s.ip || "",
+          country: s.country || "",
+          isp: s.isp || "",
+          severity: "high",
+          timestamp: s.last_seen,
+        });
+      }
+      if (!seenUsers[s.user_id]) seenUsers[s.user_id] = new Set();
+      if (s.device) seenUsers[s.user_id].add(s.device);
+    });
+    Object.entries(seenUsers).forEach(([uid, devices]) => {
+      if (devices.size >= 2) {
+        const p = profs.find(pr => pr.user_id === uid);
+        susp.push({
+          id: `multi-${uid}`,
+          type: "multi_device",
+          user_id: uid,
+          full_name: p?.full_name || p?.email || uid.slice(0, 8),
+          email: p?.email || "",
+          detail: isAr ? `أجهزة متعددة (${devices.size} أجهزة)` : `Multiple devices (${devices.size} devices)`,
+          ip: "Multiple",
+          country: "Multiple",
+          isp: "-",
+          severity: "medium",
+          timestamp: new Date().toISOString(),
+        });
+      }
+    });
+    setSuspicious(susp);
     setLoading(false);
   };
 
@@ -97,132 +189,6 @@ export function AdminUserMonitoring() {
     setRefreshing(true);
     await fetchData();
     setRefreshing(false);
-  };
-
-  const generateMockData = (profs, logs) => {
-    const now = Date.now();
-
-    const online = profs.slice(0, Math.min(8, profs.length)).map((p, i) => {
-      const lastActive = now - Math.random() * 1800000;
-      const sessionStart = now - Math.random() * 7200000;
-      const devices = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0.0.0",
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) Safari/605.1.15",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
-        "Mozilla/5.0 (Linux; Android 14) Chrome/125.0.0.0 Mobile",
-      ];
-      const locations = [
-        { country: "United States", city: "New York", ip: "192.168.1." + (100 + i) },
-        { country: "United Kingdom", city: "London", ip: "10.0.0." + (50 + i) },
-        { country: "Germany", city: "Berlin", ip: "172.16.0." + (20 + i) },
-        { country: "Canada", city: "Toronto", ip: "198.51.100." + (30 + i) },
-        { country: "UAE", city: "Dubai", ip: "203.0.113." + (40 + i) },
-      ];
-      const pages = [
-        "/dashboard", "/dashboard/transactions", "/dashboard/deposit",
-        "/dashboard/withdrawal", "/dashboard/account", "/dashboard/market",
-        "/dashboard/portfolio", "/dashboard/staking",
-      ];
-      const loc = locations[i % locations.length];
-      return {
-        user_id: p.user_id,
-        full_name: p.full_name || p.email,
-        email: p.email,
-        avatar: p.avatar_url || null,
-        status: i < 5 ? "active" : "idle",
-        currentPage: pages[i % pages.length],
-        idleTime: i < 5 ? 0 : Math.floor(Math.random() * 600),
-        sessionDuration: Math.floor((now - sessionStart) / 1000),
-        device: devices[i % devices.length],
-        ip: loc.ip,
-        country: loc.country,
-        city: loc.city,
-        lastActive: new Date(lastActive).toISOString(),
-      };
-    });
-    setOnlineUsers(online);
-
-    const sess = profs.slice(0, Math.min(20, profs.length)).map((p, i) => {
-      const browsers = ["Chrome 125", "Safari 605", "Firefox 127", "Edge 125", "Chrome Mobile 125"];
-      const osList = ["Windows 11", "macOS Sonoma", "iOS 17.5", "Android 14", "Linux Ubuntu"];
-      const locations = [
-        { country: "US", city: "New York", isp: "Comcast", ip: "192.168.1.1" },
-        { country: "GB", city: "London", isp: "BT Group", ip: "10.0.0.1" },
-        { country: "DE", city: "Frankfurt", isp: "Deutsche Telekom", ip: "172.16.0.1" },
-        { country: "CA", city: "Vancouver", isp: "Rogers", ip: "198.51.100.1" },
-        { country: "AE", city: "Abu Dhabi", isp: "Etisalat", ip: "203.0.113.1" },
-      ];
-      const loc = locations[i % locations.length];
-      const firstSeen = new Date(now - Math.random() * 30 * 86400000);
-      const lastSeen = new Date(now - Math.random() * 3600000);
-      return {
-        id: `sess-${i}`,
-        user_id: p.user_id,
-        full_name: p.full_name || p.email,
-        email: p.email,
-        device: browsers[i % browsers.length],
-        browser: osList[i % osList.length],
-        os: osList[i % osList.length],
-        ip: loc.ip,
-        country: loc.country,
-        city: loc.city,
-        isp: loc.isp,
-        firstSeen: firstSeen.toISOString(),
-        lastSeen: lastSeen.toISOString(),
-        status: i < 14 ? "active" : "expired",
-      };
-    });
-    setSessions(sess);
-
-    const susp = [];
-    profs.slice(0, 5).forEach((p, i) => {
-      if (i < 3) {
-        susp.push({
-          id: `vpn-${i}`,
-          type: "vpn",
-          user_id: p.user_id,
-          full_name: p.full_name || p.email,
-          email: p.email,
-          detail: isAr ? "تم اكتشاف VPN/Proxy" : "VPN/Proxy detected",
-          ip: "45.33.32.156",
-          country: "US",
-          isp: "DigitalOcean",
-          severity: "high",
-          timestamp: new Date(now - Math.random() * 7 * 86400000).toISOString(),
-        });
-      }
-      if (i < 2) {
-        susp.push({
-          id: `multi-${i}`,
-          type: "multi_device",
-          user_id: p.user_id,
-          full_name: p.full_name || p.email,
-          email: p.email,
-          detail: isAr ? `أجهزة متعددة (${3 + i} أجهزة)` : `Multiple devices (${3 + i} devices)`,
-          ip: "Multiple",
-          country: "Multiple",
-          isp: "-",
-          severity: "medium",
-          timestamp: new Date(now - Math.random() * 14 * 86400000).toISOString(),
-        });
-      }
-    });
-    if (profs.length > 1) {
-      susp.push({
-        id: "dup-1",
-        type: "duplicate",
-        user_id: profs[0].user_id,
-        full_name: profs[0].full_name || profs[0].email,
-        email: profs[0].email,
-        detail: isAr ? "حساب مكرر مشتبه به (مشاركة IP)" : "Suspected duplicate account (shared IP)",
-        ip: "192.168.1.100",
-        country: "US",
-        isp: "Comcast",
-        severity: "critical",
-        timestamp: new Date(now - 3 * 86400000).toISOString(),
-      });
-    }
-    setSuspicious(susp);
   };
 
   const getUserName = (userId) => {
@@ -322,7 +288,7 @@ export function AdminUserMonitoring() {
                       {onlineUsers.map((u, i) => {
                         const DeviceIcon = getDeviceIcon(u.device);
                         return (
-                          <tr key={u.user_id || i} className="border-b hover:bg-muted/30 transition-colors">
+                          <tr key={u.user_id || i} className="border-b hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/user-monitoring/${u.user_id}`)}>
                             <td className="p-3">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
@@ -562,7 +528,7 @@ export function AdminUserMonitoring() {
                           duplicate: isAr ? "حساب مكرر" : "Duplicate Account",
                         };
                         return (
-                          <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors">
+                        <tr key={s.id} className="border-b hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/user-monitoring/${s.user_id}`)}>
                             <td className="p-3">
                               <div className="flex items-center gap-2">
                                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
