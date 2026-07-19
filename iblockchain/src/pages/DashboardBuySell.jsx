@@ -123,7 +123,9 @@ export function DashboardBuySell() {
   if (loading) return <div className="flex items-center justify-center py-20"><LoaderCircle className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="relative overflow-hidden rounded-2xl p-4 md:p-6 space-y-6 bg-card/40">
+      <img src="/assets/market-buy-sell-bg-CUPuSfVB.jpg" alt={isAr ? "خلفية سوق الشراء والبيع" : "Buy and sell market background"} width={1600} height={900} className="absolute inset-0 -z-10 h-full w-full object-cover opacity-35" />
+      <div className="absolute inset-0 -z-10 bg-background/70 backdrop-blur-[2px]" />
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{isAr ? "السوق" : "Market"}</h1>
@@ -163,6 +165,11 @@ export function DashboardBuySell() {
                     >
                       <div className="h-24 bg-primary/10 relative overflow-hidden flex items-center justify-center">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-background/30 to-primary/5" />
+                        {asset.category === "metal" && <img src="/assets/market-gold-metals-CxynwGqD.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                        {asset.category === "energy" && <img src="/assets/market-oil-energy-CV2LSjKe.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                        {asset.category === "commodity" && <img src="/assets/market-commodities-BSBUi3zh.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                        {asset.category === "stock" && <img src="/assets/market-stocks-9ByAO9Zo.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                        {asset.category === "forex" && <img src="/assets/market-forex-CEwDH4Px.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />}
                         <div className="h-14 w-14 rounded-2xl bg-background/80 text-primary flex items-center justify-center shadow-xl transition-transform group-hover:scale-110 relative">
                           {asset.category === "crypto" ? <Coins className="h-8 w-8" /> :
                            asset.category === "metal" ? <Gem className="h-8 w-8" /> :
