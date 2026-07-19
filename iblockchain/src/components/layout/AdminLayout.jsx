@@ -8,7 +8,7 @@ import { Sheet, SheetTrigger, SheetContent } from "../ui/Sheet";
 import {
   LayoutDashboard, Users, FileText, ArrowDownToLine, ArrowUpFromLine,
   History, MessageSquare, Store, CirclePlus, Wallet, ClipboardList,
-  Menu, Shield, LogOut,
+  Menu, Shield, LogOut, Globe, Bell,
 } from "lucide-react";
 
 const navItems = [
@@ -25,11 +25,12 @@ const navItems = [
 const superAdminItems = [
   { key: "new-transaction", path: "/admin/new-transaction", icon: CirclePlus, badge: null },
   { key: "wallets", path: "/admin/wallets", icon: Wallet, badge: null },
+  { key: "send-notification", path: "/admin/send-notification", icon: Bell, badge: null },
   { key: "audit", path: "/admin/audit", icon: ClipboardList, badge: null },
 ];
 
 export function AdminLayout() {
-  const { language, t, isRTL } = useLanguage();
+  const { language, t, isRTL, toggleLanguage } = useLanguage();
   const { isSuperAdmin, loading, kycDocs, handleLogout, refetch: refreshData } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
@@ -124,7 +125,14 @@ export function AdminLayout() {
         })}
       </nav>
 
-      <div className="p-3 border-t border-border/50">
+      <div className="p-3 border-t border-border/50 space-y-2">
+        <button
+          onClick={toggleLanguage}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-primary/5 hover:text-foreground transition-all duration-200"
+        >
+          <Globe className="h-[18px] w-[18px]" />
+          {isAr ? "English" : "العربية"}
+        </button>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
@@ -184,6 +192,7 @@ const adminLabels = {
   messages: { en: "Messages", ar: "الرسائل" },
   market: { en: "Market Control", ar: "إدارة السوق" },
   "new-transaction": { en: "New Transaction", ar: "إضافة معاملة" },
+  "send-notification": { en: "Send Notification", ar: "إرسال إشعار" },
   wallets: { en: "Wallet Management", ar: "إدارة المحافظ" },
   audit: { en: "Audit Log", ar: "سجل المراقبة" },
 };

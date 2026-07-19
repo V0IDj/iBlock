@@ -32,6 +32,7 @@ const AdminAudit = lazy(() => import("./pages/AdminAudit").then((m) => ({ defaul
 const AdminMessages = lazy(() => import("./pages/AdminMessages").then((m) => ({ default: m.AdminMessages })));
 const AdminNewTransaction = lazy(() => import("./pages/AdminNewTransaction").then((m) => ({ default: m.AdminNewTransaction })));
 const AdminMarket = lazy(() => import("./pages/AdminMarket").then((m) => ({ default: m.AdminMarket })));
+const AdminSendNotification = lazy(() => import("./pages/AdminSendNotification").then((m) => ({ default: m.AdminSendNotification })));
 const DashboardSupport = lazy(() => import("./pages/DashboardSupport").then((m) => ({ default: m.DashboardSupport })));
 const DashboardDeposit = lazy(() => import("./pages/DashboardDeposit").then((m) => ({ default: m.DashboardDeposit })));
 const DashboardWithdrawal = lazy(() => import("./pages/DashboardWithdrawal").then((m) => ({ default: m.DashboardWithdrawal })));
@@ -130,6 +131,7 @@ export default function App() {
                 <Route path="messages" element={<AdminMessages />} />
                 <Route path="new-transaction" element={<AdminNewTransaction />} />
                 <Route path="market" element={<AdminMarket />} />
+                <Route path="send-notification" element={<AdminSendNotification />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
