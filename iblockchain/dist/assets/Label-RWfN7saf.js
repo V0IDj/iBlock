@@ -1,0 +1,1 @@
+import{i as e,l as t,r as n}from"./LanguageContext-Cg2CvonO.js";import{lt as r}from"./index-CzTmi0b_.js";var i=t(e(),1),a=n(),o=(0,i.forwardRef)(({className:e,...t},n)=>(0,a.jsx)(`label`,{ref:n,className:r(`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70`,e),...t}));o.displayName=`Label`;export{o as t};
