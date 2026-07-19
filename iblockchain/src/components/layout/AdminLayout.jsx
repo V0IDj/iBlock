@@ -8,7 +8,7 @@ import { Sheet, SheetTrigger, SheetContent } from "../ui/Sheet";
 import {
   LayoutDashboard, Users, FileText, ArrowDownToLine, ArrowUpFromLine,
   History, MessageSquare, Store, CirclePlus, Wallet, ClipboardList,
-  Menu, Shield, LogOut, Globe, Bell,
+  Menu, Shield, LogOut, Globe, Bell, Eye, Receipt,
 } from "lucide-react";
 
 const navItems = [
@@ -27,6 +27,8 @@ const superAdminItems = [
   { key: "wallets", path: "/admin/wallets", icon: Wallet, badge: null },
   { key: "send-notification", path: "/admin/send-notification", icon: Bell, badge: null },
   { key: "audit", path: "/admin/audit", icon: ClipboardList, badge: null },
+  { key: "user-monitoring", path: "/admin/user-monitoring", icon: Eye, badge: null },
+  { key: "financial-audit", path: "/admin/financial-audit", icon: Receipt, badge: null },
 ];
 
 export function AdminLayout() {
@@ -195,4 +197,6 @@ const adminLabels = {
   "send-notification": { en: "Send Notification", ar: "إرسال إشعار" },
   wallets: { en: "Wallet Management", ar: "إدارة المحافظ" },
   audit: { en: "Audit Log", ar: "سجل المراقبة" },
+  "user-monitoring": { en: "User Monitoring", ar: "مراقبة المستخدمين" },
+  "financial-audit": { en: "Financial Audit", ar: "التدقيق المالي" },
 };
